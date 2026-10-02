@@ -13,6 +13,9 @@ import { Images as ImagesIcon, Pencil as PencilIcon, Plus as PlusIcon, Sparkle a
 import { splitMatte } from '~/utils/matte';
 import { Switch } from '~/components/ui/switch';
 import { TvEditModal, type TV } from '~/components/TvEditModal';
+import SourceLogo from '~/components/SourceLogo';
+import { fetchSources, type DiscoverSource } from '~/utils/discoverApi';
+import { getCustomizeSources, getDisabledSources, setCustomizeSources, setDisabledSources } from '~/lib/discoverPrefs';
 
 export default function Settings() {
   // TV state
@@ -39,6 +42,35 @@ export default function Settings() {
 
   // Albums feed the slideshow picker.
   const [albums, setAlbums] = React.useState<{ id: string; name: string }[]>([]);
+
+  // Discover sources: all on unless the person turned the master switch off and chose.
+  const [discoverSources, setDiscoverSources] = React.useState<DiscoverSource[]>([]);
+  const [customizeSources, setCustomizeSourcesState] = React.useState(false);
+  const [disabledSources, setDisabledState] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    setCustomizeSourcesState(getCustomizeSources());
+    setDisabledState(getDisabledSources());
+    fetchSources().then(({ sources }) => setDiscoverSources(sources)).catch(() => setDiscoverSources([]));
+  }, []);
+
+  const handleToggleAllSources = (all: boolean) => {
+    setCustomizeSourcesState(!all);
+    setCustomizeSources(!all);
+    if (all) {
+      // Back to everything; a source added later is simply on.
+      setDisabledState(new Set());
+      setDisabledSources(new Set());
+    }
+  };
+
+  const handleToggleSource = (id: string, on: boolean) => {
+    const next = new Set(disabledSources);
+    if (on) next.delete(id);
+    else next.add(id);
+    setDisabledState(next);
+    setDisabledSources(next);
+  };
 
   // Fetch TVs
   const fetchTvs = React.useCallback(async () => {
@@ -388,6 +420,46 @@ export default function Settings() {
             hashes of images uploaded before this existed, and reports any stored twice under
             different names.
           </p>
+        </div>
+
+        {/* Discover */}
+        <div className="bg-card rounded-2xl border border-border p-5 mb-8">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">Discover</h2>
+          <label className="flex items-center justify-between gap-4">
+            <span>
+              <span className="block font-semibold text-foreground">All sources</span>
+              <span className="block text-sm text-muted-foreground">
+                Search every art source. Turn this off to choose which ones to use.
+              </span>
+            </span>
+            <Switch checked={!customizeSources} onCheckedChange={handleToggleAllSources} aria-label="Use all Discover sources" />
+          </label>
+          {customizeSources && (
+            <ul className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
+              {discoverSources.map((s) => {
+                const on = !disabledSources.has(s.id);
+                const lastOn = on && discoverSources.length - disabledSources.size <= 1;
+                return (
+                  <li key={s.id}>
+                    <label className="flex items-center gap-3">
+                      <SourceLogo source={s} className="size-9" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-foreground">{s.name}</span>
+                        <span className="block truncate text-sm text-muted-foreground">{s.tagline}</span>
+                      </span>
+                      <Switch
+                        checked={on}
+                        disabled={lastOn}
+                        onCheckedChange={(next) => handleToggleSource(s.id, next)}
+                        aria-label={`Use ${s.name}`}
+                      />
+                    </label>
+                  </li>
+                );
+              })}
+              {discoverSources.length === 0 && <li className="text-sm text-muted-foreground">Could not load the sources.</li>}
+            </ul>
+          )}
         </div>
 
         {/* Provider Settings */}

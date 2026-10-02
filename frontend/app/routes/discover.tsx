@@ -11,6 +11,7 @@ import SourcePicker, { ALL_SOURCES } from "~/components/SourcePicker";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
+import { getDisabledSources } from "~/lib/discoverPrefs";
 import { exploreTiles, type ExploreTile } from "~/lib/explore";
 import { createAlbum, fetchAlbums } from "~/utils/galleryApi";
 import {
@@ -68,7 +69,13 @@ function remember(key: string, value: string) {
 }
 
 export default function Discover() {
-  const [sources, setSources] = useState<DiscoverSource[]>([]);
+  const [allSources, setSources] = useState<DiscoverSource[]>([]);
+  // Settings can switch sources off; they vanish from the picker, the grid and "all" searches.
+  const sources = useMemo(() => {
+    const off = getDisabledSources();
+    const kept = allSources.filter((s) => !off.has(s.id));
+    return kept.length ? kept : allSources;
+  }, [allSources]);
   const [season, setSeason] = useState("");
   // Which sources are resting or busy, kept apart so refreshing it never restarts a search.
   const [statuses, setStatuses] = useState<Record<string, SourceStatus>>({});

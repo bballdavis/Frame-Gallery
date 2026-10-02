@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import ImageUploadModal from "~/components/imageUploadModal";
 import { Popover } from "radix-ui";
 import { Tooltip } from "~/components/ui/tooltip";
-import { FolderSimple as FolderSimpleIcon, Trash as TrashIcon, X as XIcon, ArrowRight as ArrowRightIcon, ArrowsDownUp as ArrowsUpDownIcon, Check as CheckIcon, CheckCircle as CheckCircleIcon, CheckCircle as CheckCircleSolidIcon, MagnifyingGlass as MagnifyingGlassIcon, UploadSimple as ArrowUpTrayIcon, XCircle as XCircleIcon } from "@phosphor-icons/react";
+import { ArrowsOutCardinal as MoveIcon, Trash as TrashIcon, X as XIcon, ArrowRight as ArrowRightIcon, ArrowsDownUp as ArrowsUpDownIcon, Check as CheckIcon, CheckCircle as CheckCircleIcon, CheckCircle as CheckCircleSolidIcon, MagnifyingGlass as MagnifyingGlassIcon, UploadSimple as ArrowUpTrayIcon, XCircle as XCircleIcon } from "@phosphor-icons/react";
 type ProviderAlbum = { id: string; name: string; asset_count: number };
 type ProviderImage = { id: string; filename: string; thumb_url: string; metadata: any };
 
@@ -557,7 +557,7 @@ export default function Gallery() {
                 <Popover.Root>
                   <Tooltip label="Move to an album">
                     <Popover.Trigger className={iconButton} disabled={bulkBusy || albums.length === 0} aria-label="Move selected to an album">
-                      <FolderSimpleIcon className="size-5" aria-hidden="true" />
+                      <MoveIcon className="size-5" aria-hidden="true" />
                     </Popover.Trigger>
                   </Tooltip>
                   <Popover.Portal>
