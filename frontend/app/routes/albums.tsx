@@ -59,7 +59,7 @@ export default function Albums() {
           Gallery
         </Link>
         <Button type="button" variant="outline" size="sm" onClick={() => setNameTarget("new")}>
-          <PlusIcon aria-hidden="true" />
+          <PlusIcon weight="regular" aria-hidden="true" />
           New album
         </Button>
       </div>
@@ -81,7 +81,7 @@ export default function Albums() {
             aria-label="Clear search"
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
           >
-            <XCircleIcon className="size-5" aria-hidden="true" />
+            <XCircleIcon weight="regular" className="size-5" aria-hidden="true" />
           </button>
         )}
       </div>

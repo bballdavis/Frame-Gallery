@@ -208,6 +208,21 @@ export default function Settings() {
     }
   };
 
+  // Turning it off has no Save button to go with it, so the change is stored straight away.
+  const handleToggleImmich = async (enabled: boolean) => {
+    setImmichEnabled(enabled);
+    if (enabled || !immichHost || !immichApiKey) return;
+    setProviderError("");
+    try {
+      await setProvider('immich', { host: immichHost, port: immichPort, api_key: immichApiKey, enabled: false });
+      await fetchProviders();
+      toast.success('Immich turned off. Restart Frame Gallery to apply it.', { position: 'top-center' });
+    } catch (e: any) {
+      setImmichEnabled(true);
+      setProviderError(e.message || 'Failed to turn Immich off');
+    }
+  };
+
   const handleDeleteImmich = async () => {
     setProviderSaving(true);
     setProviderError("");
@@ -290,7 +305,7 @@ export default function Settings() {
             <Input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Name (optional)" />
             <Input type="text" value={mac} onChange={e => setMac(e.target.value)} placeholder="MAC (optional)" />
             <Button size="icon" aria-label="Add TV" title="Add TV" className="bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 sm:shrink-0" disabled={adding}>
-              <PlusIcon className="h-4 w-4" />
+              <PlusIcon weight="regular" className="h-4 w-4" />
             </Button>
           </form>
           {error && <div className="text-destructive text-sm mt-1">{error}</div>}
@@ -378,44 +393,53 @@ export default function Settings() {
         {/* Provider Settings */}
         <div className="bg-card rounded-2xl border border-border p-5">
           <h2 className="text-lg font-semibold mb-4 text-foreground">External Providers</h2>
-          <form onSubmit={handleSaveImmich} className="flex flex-col gap-3 max-w-lg">
+          <form onSubmit={handleSaveImmich} className="flex flex-col gap-4">
             <label className="flex items-center justify-between gap-4">
-              <span className="font-semibold text-foreground">Enable Immich</span>
-              <Switch checked={immichEnabled} onCheckedChange={setImmichEnabled} aria-label="Enable Immich" />
+              <span>
+                <span className="block font-semibold text-foreground">Immich</span>
+                <span className="block text-sm text-muted-foreground">Browse and add pictures from your own Immich server.</span>
+              </span>
+              <Switch checked={immichEnabled} onCheckedChange={handleToggleImmich} aria-label="Enable Immich" />
             </label>
+            {/* The fields and their buttons belong to the switch: they show and hide together. */}
             {immichEnabled && (
-              <>
-            <Input
-              type="text"
-              value={immichHost}
-              onChange={e => setImmichHost(e.target.value)}
-              placeholder="Immich Host (e.g. immich.example.com)"
-              required={immichEnabled}
-            />
-            <Input
-              type="number"
-              value={immichPort === undefined ? '' : immichPort}
-              onChange={e => setImmichPort(e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="Port (default 443)"
-            />
-            <Input
-              type="text"
-              value={immichApiKey}
-              onChange={e => setImmichApiKey(e.target.value)}
-              placeholder="Immich API Key"
-              required={immichEnabled}
-            />
-              </>
+              <div className="flex flex-col gap-3 border-t border-border pt-4">
+                <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
+                  <Input
+                    type="text"
+                    value={immichHost}
+                    onChange={e => setImmichHost(e.target.value)}
+                    placeholder="Host (e.g. immich.example.com)"
+                    aria-label="Immich host"
+                    required
+                  />
+                  <Input
+                    type="number"
+                    value={immichPort === undefined ? '' : immichPort}
+                    onChange={e => setImmichPort(e.target.value ? parseInt(e.target.value) : undefined)}
+                    placeholder="Port (443)"
+                    aria-label="Immich port"
+                  />
+                </div>
+                <Input
+                  type="text"
+                  value={immichApiKey}
+                  onChange={e => setImmichApiKey(e.target.value)}
+                  placeholder="API key"
+                  aria-label="Immich API key"
+                  required
+                />
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <Button type="button" variant="outline" onClick={handleDeleteImmich} disabled={providerSaving}>
+                    Delete config
+                  </Button>
+                  <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary-hover" disabled={providerSaving}>
+                    {providerSaving ? 'Saving…' : 'Save config'}
+                  </Button>
+                </div>
+              </div>
             )}
-            <div className="flex flex-col sm:flex-row gap-2 mt-2">
-              <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary-hover" disabled={providerSaving}>
-                {providerSaving ? 'Saving…' : 'Save Immich Config'}
-              </Button>
-              <Button type="button" className="bg-secondary text-secondary-foreground hover:bg-secondary/80" onClick={handleDeleteImmich} disabled={providerSaving}>
-                Delete Config
-              </Button>
-            </div>
-            {providerError && <div className="text-destructive text-sm mt-1">{providerError}</div>}
+            {providerError && <div className="text-destructive text-sm">{providerError}</div>}
           </form>
         </div>
       </div>

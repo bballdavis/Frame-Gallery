@@ -144,19 +144,19 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onBrows
                           </p>
                         </div>
                         {/* Stacked in the bottom-right corner, add on top, so they never push the text aside. */}
-                        <div className="flex shrink-0 flex-col gap-2">
-                          <Tooltip label="Add to gallery" side="left">
+                        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                          <Tooltip label="Add to gallery">
                             <Button
                               size="icon"
                               className="rounded-full bg-white text-neutral-950 hover:bg-white/90"
                               aria-label="Add to gallery"
                               onClick={() => onAdd(art)}
                             >
-                              <PlusIcon className="size-5" aria-hidden="true" />
+                              <PlusIcon weight="regular" className="size-5" aria-hidden="true" />
                             </Button>
                           </Tooltip>
                           {source && (
-                            <Tooltip label={`More from ${source.short_name.replace(/^the /i, "")}`} side="left">
+                            <Tooltip label={`More from ${source.short_name.replace(/^the /i, "")}`}>
                               <Button
                                 size="icon"
                                 variant="outline"

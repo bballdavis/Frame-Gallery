@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import ImageUploadModal from "~/components/imageUploadModal";
 import { Popover } from "radix-ui";
 import { Tooltip } from "~/components/ui/tooltip";
-import { ArrowRight as ArrowRightIcon, ArrowsDownUp as ArrowsUpDownIcon, Check as CheckIcon, CheckCircle as CheckCircleIcon, CheckCircle as CheckCircleSolidIcon, MagnifyingGlass as MagnifyingGlassIcon, UploadSimple as ArrowUpTrayIcon, XCircle as XCircleIcon } from "@phosphor-icons/react";
+import { FolderSimple as FolderSimpleIcon, Trash as TrashIcon, X as XIcon, ArrowRight as ArrowRightIcon, ArrowsDownUp as ArrowsUpDownIcon, Check as CheckIcon, CheckCircle as CheckCircleIcon, CheckCircle as CheckCircleSolidIcon, MagnifyingGlass as MagnifyingGlassIcon, UploadSimple as ArrowUpTrayIcon, XCircle as XCircleIcon } from "@phosphor-icons/react";
 type ProviderAlbum = { id: string; name: string; asset_count: number };
 type ProviderImage = { id: string; filename: string; thumb_url: string; metadata: any };
 
@@ -77,7 +77,6 @@ export default function Gallery() {
   // Multi-select: filenames, plus the last clicked row so shift-click can span a range.
   const [selected, setSelected] = useState<string[]>([]);
   const lastClickedIndex = useRef<number | null>(null);
-  const [bulkAlbum, setBulkAlbum] = useState("");
   const [bulkBusy, setBulkBusy] = useState(false);
   // Files waiting on an album choice after a drop.
   const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
@@ -354,15 +353,14 @@ export default function Gallery() {
     lastClickedIndex.current = index;
   }
 
-  async function handleBulkAssign() {
-    if (!bulkAlbum || selected.length === 0) return;
+  async function handleBulkAssign(albumName: string) {
+    if (!albumName || selected.length === 0) return;
     setBulkBusy(true);
     setError("");
     try {
-      await addImagesToAlbum(bulkAlbum, selected);
-      toast.success(`${selected.length} image${selected.length === 1 ? "" : "s"} moved to ${bulkAlbum}`, { position: "top-center" });
+      await addImagesToAlbum(albumName, selected);
+      toast.success(`${selected.length} image${selected.length === 1 ? "" : "s"} moved to ${albumName}`, { position: "top-center" });
       setSelected([]);
-      setBulkAlbum("");
       lastClickedIndex.current = null;
       await loadLocalGallery();
     } catch (e: any) {
@@ -445,7 +443,7 @@ export default function Gallery() {
                 aria-label="Clear search"
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted-foreground hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
-                <XCircleIcon className="size-5" aria-hidden="true" />
+                <XCircleIcon weight="regular" className="size-5" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -553,38 +551,61 @@ export default function Gallery() {
       )}
 
           {selected.length > 0 && (
-            <div className="sticky bottom-4 z-30 mb-8 flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3 shadow-lg">
-              <span className="text-sm font-medium">
-                {selected.length} image{selected.length === 1 ? "" : "s"} selected
-              </span>
-              <select
-                value={bulkAlbum}
-                onChange={e => setBulkAlbum(e.target.value)}
-                className="border border-input bg-background px-2 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-ring/60"
-                disabled={bulkBusy}
-              >
-                <option value="">Move to album…</option>
-                {albums.map(album => (
-                  <option key={album.id} value={album.name}>{album.name}</option>
-                ))}
-              </select>
-              <Button onClick={handleBulkAssign} disabled={bulkBusy || !bulkAlbum}>
-                {bulkBusy ? "Working…" : "Move"}
-              </Button>
-              <Button
-                onClick={handleBulkDelete}
-                disabled={bulkBusy}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </Button>
-              <button
-                type="button"
-                className="text-sm text-muted-foreground hover:underline"
-                onClick={() => { setSelected([]); lastClickedIndex.current = null; }}
-              >
-                Clear
-              </button>
+            <div className="sticky bottom-20 z-30 mb-8 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-lg">
+              <span className="text-sm font-medium">{selected.length} selected</span>
+              <div className="ml-auto flex items-center gap-2">
+                <Popover.Root>
+                  <Tooltip label="Move to an album">
+                    <Popover.Trigger className={iconButton} disabled={bulkBusy || albums.length === 0} aria-label="Move selected to an album">
+                      <FolderSimpleIcon className="size-5" aria-hidden="true" />
+                    </Popover.Trigger>
+                  </Tooltip>
+                  <Popover.Portal>
+                    <Popover.Content
+                      align="end"
+                      side="top"
+                      sideOffset={8}
+                      collisionPadding={12}
+                      className="z-50 max-h-64 w-56 overflow-y-auto rounded-lg border border-border bg-popover p-1.5 text-sm text-popover-foreground shadow-lg focus:outline-none"
+                    >
+                      <p className="px-2.5 pb-1 pt-1.5 text-xs font-medium text-muted-foreground">Move to…</p>
+                      {albums.map(album => (
+                        <Popover.Close asChild key={album.id}>
+                          <button
+                            type="button"
+                            onClick={() => handleBulkAssign(album.name)}
+                            className="flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                          >
+                            <span className="truncate">{album.name}</span>
+                            <span className="text-xs text-muted-foreground tabular-nums">{album.images.length}</span>
+                          </button>
+                        </Popover.Close>
+                      ))}
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
+                <Tooltip label="Clear selection">
+                  <button
+                    type="button"
+                    className={iconButton}
+                    aria-label="Clear selection"
+                    onClick={() => { setSelected([]); lastClickedIndex.current = null; }}
+                  >
+                    <XIcon weight="regular" className="size-5" aria-hidden="true" />
+                  </button>
+                </Tooltip>
+                <Tooltip label={bulkBusy ? "Working…" : `Delete ${selected.length} image${selected.length === 1 ? "" : "s"}`}>
+                  <button
+                    type="button"
+                    onClick={handleBulkDelete}
+                    disabled={bulkBusy}
+                    aria-label={`Delete ${selected.length} selected`}
+                    className="inline-flex size-9 items-center justify-center rounded-lg bg-destructive text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                  >
+                    <TrashIcon className="size-5" aria-hidden="true" />
+                  </button>
+                </Tooltip>
+              </div>
             </div>
           )}
 
@@ -593,11 +614,11 @@ export default function Gallery() {
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
               <div className="bg-card rounded-lg shadow-lg p-6 w-full max-w-sm relative">
                 <button
-                  className="absolute top-2 right-2 text-muted-foreground hover:text-muted-foreground text-xl font-bold"
+                  className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                   onClick={() => setPendingFiles(null)}
                   aria-label="Cancel"
                 >
-                  ×
+                  <XIcon weight="regular" className="size-5" aria-hidden="true" />
                 </button>
                 <h4 className="text-base font-semibold mb-1">
                   Upload {pendingFiles.length} image{pendingFiles.length === 1 ? "" : "s"}
@@ -687,7 +708,8 @@ export default function Gallery() {
           )}
 
       {/* Floating Action Buttons */}
-      <div className="fixed bottom-24 flex-row right-6 md:bottom-8 md:right-8 z-40 flex gap-2">
+      {/* Out of the way while images are selected, so it never covers the action bar */}
+      <div className={`fixed bottom-24 flex-row right-6 md:bottom-8 md:right-8 z-40 flex gap-2 ${selected.length > 0 ? "hidden" : ""}`}>
         <button
           type="button"
           onClick={() => setShowUploadModal(true)}

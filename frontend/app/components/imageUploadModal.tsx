@@ -162,7 +162,7 @@ export default function ImageUploadModal({
             className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md"
             aria-label="Close"
           >
-            <XMarkIcon className="w-5 h-5" />
+            <XMarkIcon weight="regular" className="w-5 h-5" />
           </button>
         </div>
 

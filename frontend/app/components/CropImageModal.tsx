@@ -135,7 +135,7 @@ const CropImageModal: React.FC<CropImageModalProps> = ({
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h3 className="text-lg font-semibold">Crop Image: {filename}</h3>
           <button onClick={handleClose} className="text-foreground hover:text-black">
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon weight="regular" className="h-5 w-5" />
           </button>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 p-4">

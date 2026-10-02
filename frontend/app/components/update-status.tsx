@@ -1,6 +1,5 @@
-import { BellRinging as BellAlertIcon, Sparkle as SparklesIcon, X as XMarkIcon } from "@phosphor-icons/react";
+import { DownloadSimple, Sparkle as SparklesIcon, X as XMarkIcon } from "@phosphor-icons/react";
 import React, { useEffect, useState } from "react";
-import { Button } from "~/components/ui/button";
 import { fetchAppStatus, type AppStatusResponse } from "~/utils/appApi";
 
 const DISMISSED_UPDATE_VERSION_KEY = "frametv-dismissed-update-version";
@@ -319,19 +318,19 @@ export default function UpdateStatus() {
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon-sm"
-        onClick={openModal}
-        aria-label={`Update available${appStatus?.latest_version ? `: ${appStatus.latest_version}` : ""}`}
-        title={hasUpdate ? "Update available" : loading ? "Checking for updates..." : "No update available"}
-        disabled={!hasUpdate}
-        className="relative border-primary/40 text-primary hover:bg-selection hover:text-selection-foreground disabled:opacity-100"
-      >
-        <BellAlertIcon className="h-4 w-4" />
-        {hasUpdate && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
-      </Button>
+      {hasUpdate && (
+        // Sized and shaped like the theme toggle beside it, in the accent colour.
+        <button
+          type="button"
+          onClick={openModal}
+          aria-label={`Update available${appStatus?.latest_version ? `: ${appStatus.latest_version}` : ""}`}
+          title="Update available"
+          className="relative rounded-full p-2 text-primary transition-colors hover:bg-selection focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
+          <DownloadSimple className="h-5 w-5" aria-hidden="true" />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-card" aria-hidden="true" />
+        </button>
+      )}
 
       {hasUpdate && showPopup && (
         <div className="fixed right-4 top-4 z-50 w-[min(24rem,calc(100vw-2rem))]">
@@ -356,7 +355,7 @@ export default function UpdateStatus() {
               aria-label="Dismiss update popup"
               className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
             >
-              <XMarkIcon className="h-4 w-4" />
+              <XMarkIcon weight="regular" className="h-4 w-4" />
             </button>
             <div className="flex items-start gap-3">
               <div className="rounded-full bg-selection p-2 text-selection-foreground">
@@ -406,7 +405,7 @@ export default function UpdateStatus() {
                 aria-label="Close update modal"
                 className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
               >
-                <XMarkIcon className="h-5 w-5" />
+                <XMarkIcon weight="regular" className="h-5 w-5" />
               </button>
             </div>
 

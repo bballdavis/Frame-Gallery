@@ -148,7 +148,7 @@ function AddTile({ onClick, className }: { onClick: () => void; className: strin
       className={`group flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border bg-card/50 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-selection/40 hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${className}`}
     >
       <span className="inline-flex size-9 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-primary/10">
-        <PlusIcon className="size-5" aria-hidden="true" />
+        <PlusIcon weight="regular" className="size-5" aria-hidden="true" />
       </span>
       <span className="text-sm font-medium">New album</span>
     </button>
@@ -267,7 +267,7 @@ export default function AlbumStrip({ albums, activeId, onSelect, onCreate, onRen
           {!needsAdd && (
             <Tooltip label="New album">
               <button type="button" className={iconButton} onClick={onCreate} aria-label="New album">
-                <PlusIcon className="size-5" aria-hidden="true" />
+                <PlusIcon weight="regular" className="size-5" aria-hidden="true" />
               </button>
             </Tooltip>
           )}

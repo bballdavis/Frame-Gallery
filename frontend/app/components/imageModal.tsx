@@ -108,7 +108,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
             className="text-muted-foreground hover:text-foreground rounded-lg p-1 transition-colors hover:bg-muted"
             aria-label="Close modal"
           >
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon weight="regular" className="h-5 w-5" />
           </button>
         </div>
 

@@ -128,7 +128,7 @@ export default function AddToGalleryDialog({
               className="rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               aria-label="Close"
             >
-              <XMarkIcon className="size-5" />
+              <XMarkIcon weight="regular" className="size-5" />
             </Dialog.Close>
           </div>
 

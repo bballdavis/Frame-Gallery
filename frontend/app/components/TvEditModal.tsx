@@ -72,7 +72,7 @@ export function TvEditModal({ tv, albums, onClose, onUpdate, onRemoveAllImages, 
                   </Dialog.Description>
                 </div>
                 <Dialog.Close aria-label="Close" className="rounded p-1 text-muted-foreground hover:text-foreground">
-                  <XIcon className="h-5 w-5" />
+                  <XIcon weight="regular" className="h-5 w-5" />
                 </Dialog.Close>
               </div>
 

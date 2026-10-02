@@ -10,7 +10,6 @@ import {
   type MonthlyCount,
 } from "~/utils/galleryApi";
 import HomeHero, { type HeroSlide } from "~/components/HomeHero";
-import UpdateStatus from "~/components/update-status";
 
 type AlbumSummary = { id: number; name: string; images: string[] };
 
@@ -215,13 +214,6 @@ export default function Home() {
   const [months, setMonths] = useState<MonthlyCount[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
-
   useEffect(() => {
     setLoading(true);
     // The details and the monthly counts only decorate the page; it still works without them.
@@ -254,10 +246,7 @@ export default function Home() {
 
   return (
     <div className="relative mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-8 lg:p-12">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">{greeting()}</h1>
-        <UpdateStatus />
-      </div>
+      <h1 className="sr-only">Home</h1>
 
       {!loading && images.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-muted-foreground">

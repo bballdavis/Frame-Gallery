@@ -4,6 +4,7 @@ import { useLocation } from "react-router";
 import { useTheme } from "next-themes";
 import { Moon as MoonIcon, Sun as SunIcon } from "@phosphor-icons/react";
 
+import UpdateStatus from "~/components/update-status";
 import lockupForLight from "~/assets/brand/frame-gallery-logo-wordmark-for-light.svg";
 import lockupForDark from "~/assets/brand/frame-gallery-logo-wordmark-for-dark.svg";
 
@@ -66,6 +67,8 @@ export default function Header() {
         </div>
         <div className="flex items-center gap-3">
           <span className="hidden text-xs font-medium text-muted-foreground sm:inline">{VERSION}</span>
+          {/* Appears only when a newer version exists */}
+          <UpdateStatus />
           <ThemeToggle />
         </div>
       </div>

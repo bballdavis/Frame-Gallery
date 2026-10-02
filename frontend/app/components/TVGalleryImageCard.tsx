@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image as PhotoIcon, Play as PlayIcon, Trash as TrashIcon } from "@phosphor-icons/react";
+import { Check as CheckIcon, Image as PhotoIcon, Play as PlayIcon, Trash as TrashIcon } from "@phosphor-icons/react";
 import { Skeleton } from "~/components/ui/skeleton"
 import ImageSource from "./ImageSource";
 import { type TVGalleryImage, type TVImageOrigin } from "../utils/tvApi";
@@ -35,10 +35,14 @@ export default function TVGalleryImageCard({ image, selectedTvIp, thumbnailsLoad
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
   return (
+    // The whole card is the selection target: a click anywhere on it (shift-click for a range) picks it.
+    // The buttons and the source link keep their own clicks.
     <div
       key={image.content_id}
+      onClick={onToggleSelect ? (event) => onToggleSelect(event.shiftKey) : undefined}
       className={
-        "flex gap-4 p-4 bg-card border rounded-lg hover:shadow-md transition-shadow " +
+        "relative flex gap-4 p-4 bg-card border rounded-lg hover:shadow-md transition-shadow " +
+        (onToggleSelect ? "cursor-pointer select-none has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50 " : "") +
         (selected ? "border-primary ring-1 ring-primary" : "border-border") +
         // Ours stand out with a tint; Samsung's own art is quieter.
         (image.origin === "app" ? " bg-selection/40 border-primary/30" : "") +
@@ -46,19 +50,31 @@ export default function TVGalleryImageCard({ image, selectedTvIp, thumbnailsLoad
       }
     >
       {onToggleSelect && (
-        <label className="flex items-center self-center cursor-pointer" title="Select image">
-          <input
-            type="checkbox"
-            className="h-4 w-4 accent-primary"
-            checked={!!selected}
-            onChange={(event) => onToggleSelect((event.nativeEvent as MouseEvent).shiftKey)}
-          />
-        </label>
+        // A real checkbox, hidden but focusable, so the keyboard and screen readers can select too.
+        <input
+          type="checkbox"
+          className="peer sr-only"
+          checked={!!selected}
+          aria-label={`Select ${image.filename}`}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onToggleSelect((event.nativeEvent as MouseEvent).shiftKey)}
+        />
       )}
       {/* The thumbnail always comes from the parent's single batched request. Letting the
           <img> fall back to the per-image endpoint fired one TV websocket per card, which
           is what used to pile up and starve the server when a TV stopped answering. */}
-      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted border border-border">
+      <div className="relative h-20 w-20 shrink-0 self-center overflow-hidden rounded-xl bg-muted border border-border">
+        {onToggleSelect && (
+          <span
+            aria-hidden="true"
+            className={
+              "absolute left-1.5 top-1.5 z-10 flex size-5 items-center justify-center rounded-full border shadow-sm transition-colors " +
+              (selected ? "border-primary bg-primary text-primary-foreground" : "border-white/80 bg-black/25 text-transparent")
+            }
+          >
+            <CheckIcon weight="bold" className="size-3" />
+          </span>
+        )}
         {image.thumbnail ? (
           <>
             {!imgLoaded && !imgError && <Loader />}
@@ -93,7 +109,9 @@ export default function TVGalleryImageCard({ image, selectedTvIp, thumbnailsLoad
           {ORIGIN_BADGE[image.origin].label}
         </span>
         {image.provenance && image.provenance.source && image.provenance.source !== "upload" && (
-          <ImageSource provenance={image.provenance} className="mt-1" />
+          <span className="block" onClick={(event) => event.stopPropagation()}>
+            <ImageSource provenance={image.provenance} className="mt-1" />
+          </span>
         )}
         <div className="text-xs text-muted-foreground mt-1 space-y-1">
           <p>
@@ -105,7 +123,7 @@ export default function TVGalleryImageCard({ image, selectedTvIp, thumbnailsLoad
       </div>
       <div className="flex gap-2 self-center ml-4">
         <button
-          onClick={() => onPlay(image.content_id)}
+          onClick={(event) => { event.stopPropagation(); onPlay(image.content_id); }}
           className="inline-flex items-center justify-center rounded-lg border border-primary bg-transparent p-2 text-primary transition-colors hover:bg-primary/10 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
           title="Play image"
           aria-label="Play image"
@@ -113,7 +131,7 @@ export default function TVGalleryImageCard({ image, selectedTvIp, thumbnailsLoad
           <PlayIcon weight="fill" className="w-5 h-5" />
         </button>
         <button
-          onClick={() => onDelete(image.content_id)}
+          onClick={(event) => { event.stopPropagation(); onDelete(image.content_id); }}
           className="inline-flex items-center justify-center p-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-lg transition-colors"
           title="Delete image"
         >

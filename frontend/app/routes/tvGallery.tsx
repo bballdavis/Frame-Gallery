@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { Popover } from "radix-ui";
-import { CheckCircle as CheckCircleIcon, CheckCircle as CheckCircleSolidIcon, Funnel as FunnelIcon, Sparkle as SparklesIcon, Trash as TrashIcon, X as XMarkIcon } from "@phosphor-icons/react";
+import { CheckCircle as CheckCircleIcon, CheckCircle as CheckCircleSolidIcon, Funnel as FunnelIcon, Sparkle as SparklesIcon, Television as TvIcon, Trash as TrashIcon, X as XMarkIcon } from "@phosphor-icons/react";
 import TVGalleryImageCard from "~/components/TVGalleryImageCard";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Tooltip } from "~/components/ui/tooltip";
@@ -221,8 +221,7 @@ export default function TVGallery() {
       {!tvsLoaded ? (
         <div className="mb-6 space-y-2" role="status" aria-busy="true">
           <span className="sr-only">Loading your TVs</span>
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-10 w-full rounded-lg" />
+          <Skeleton className="h-11 w-full rounded-md" />
         </div>
       ) : tvs.length === 0 ? (
         <div className="text-center py-12">
@@ -230,8 +229,16 @@ export default function TVGallery() {
         </div>
       ) : (
         <>
-          <div className="mb-6">
-            <label htmlFor="tv-select" className="block text-sm font-medium mb-2">Select TV</label>
+          {/* One bar like the search bars: a TV icon segment, then the picker. */}
+          <div className="mb-6 flex h-11 items-stretch rounded-md border border-input bg-transparent shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 dark:bg-input/30">
+            <label
+              htmlFor="tv-select"
+              className="inline-flex shrink-0 items-center rounded-l-md border-r border-border bg-muted/50 px-3 text-muted-foreground"
+              title="Select TV"
+            >
+              <TvIcon className="size-5" aria-hidden="true" />
+              <span className="sr-only">Select TV</span>
+            </label>
             <select
               id="tv-select"
               value={selectedTvIp}
@@ -241,7 +248,7 @@ export default function TVGallery() {
                 setSelected([]);
                 lastClickedIndex.current = null;
               }}
-              className="w-full p-2 border border-border rounded-lg bg-card"
+              className="min-w-0 flex-1 rounded-r-md bg-transparent px-3 text-base focus-visible:outline-none"
             >
               <option value="" disabled>
                 Select a TV
@@ -376,7 +383,7 @@ export default function TVGallery() {
               ))}
 
               {selected.length > 0 && (
-                <div className="sticky bottom-20 z-30 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3 shadow-lg">
+                <div className="sticky bottom-20 z-30 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-lg">
                   <span className="text-sm font-medium">
                     {selected.length} selected
                   </span>
@@ -388,7 +395,7 @@ export default function TVGallery() {
                         aria-label="Clear selection"
                         onClick={() => { setSelected([]); lastClickedIndex.current = null; }}
                       >
-                        <XMarkIcon className="size-5" aria-hidden="true" />
+                        <XMarkIcon weight="regular" className="size-5" aria-hidden="true" />
                       </button>
                     </Tooltip>
                     <Tooltip label={deleting ? "Deleting…" : `Delete ${selected.length} from the TV`}>
