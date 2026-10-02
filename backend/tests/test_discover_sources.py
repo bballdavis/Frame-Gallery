@@ -611,7 +611,7 @@ def test_a_keyword_collection_searches_commons_for_its_keyword_without_a_categor
     posters.search("", 1, True, "any")
 
     witch, travel = (call["params"]["gsrsearch"] for call in net.calls)
-    assert "deepcategory:" not in witch and witch.endswith(" postcard filew:>1500 filetype:bitmap")
+    assert "deepcategory:" not in witch and witch.endswith(" filew:>1500 filetype:bitmap") and " postcard " in witch
     assert witch.startswith("witch") and '"' not in witch
     # With nothing typed, a poster collection shows travel posters.
     assert travel.startswith("travel poster ") and "filew:>2000" in travel

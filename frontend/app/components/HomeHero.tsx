@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip } from "./ui/tooltip";
 import { getUploadUrl } from "~/utils/galleryApi";
+import { proxiedImageUrl } from "~/utils/discoverApi";
 
 const ROTATE_MS = 7000;
 const SWIPE_PX = 40;
@@ -14,11 +15,35 @@ export type HeroSlide = {
   /** Which collection this slide belongs to, e.g. "Latest added" */
   topic: string;
   filename: string;
+  /** A picture from elsewhere (Discover), used instead of the library file `filename`. */
+  imageUrl?: string;
   title: string;
   subtitle: string;
   to: string;
   action: string;
 };
+
+/**
+ * A slide's picture. One from Discover is loaded straight from its source, and through this
+ * app instead if the browser cannot (some sites refuse cross-site image requests).
+ */
+function SlidePicture({ slide, eager }: { slide: HeroSlide; eager: boolean }) {
+  const [proxied, setProxied] = useState(false);
+  const external = slide.imageUrl;
+  const src = external ? (proxied ? proxiedImageUrl(external) : external) : getUploadUrl(slide.filename, 800);
+  return (
+    <img
+      key={src}
+      src={src}
+      alt={slide.title}
+      loading={eager ? "eager" : "lazy"}
+      draggable={false}
+      referrerPolicy={external ? "no-referrer" : undefined}
+      onError={() => external && !proxied && setProxied(true)}
+      className="absolute inset-0 size-full object-cover"
+    />
+  );
+}
 
 interface HomeHeroProps {
   /** null while loading */
@@ -98,13 +123,7 @@ export default function HomeHero({ slides }: HomeHeroProps) {
             inert={position !== index}
             className="relative aspect-[4/3] w-full shrink-0 sm:aspect-[16/6]"
           >
-            <img
-              src={getUploadUrl(slide.filename, 800)}
-              alt={slide.title}
-              loading={position === 0 ? "eager" : "lazy"}
-              draggable={false}
-              className="absolute inset-0 size-full object-cover"
-            />
+            <SlidePicture slide={slide} eager={position === 0} />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-20 text-white sm:px-6 sm:pb-5">
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0 max-w-xl">

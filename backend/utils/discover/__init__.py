@@ -5,18 +5,31 @@ from urllib.parse import urlsplit
 
 from .artic import artic
 from .cleveland import cleveland
+from . import credentials
 from .common import DiscoverError, DiskCache
+from .deviantart import deviantart
+from .flickr import flickr
 from .limits import Limiter
 from .met import met
 from .nasa import nasa
+from .pixabay import pixabay
 from .reframed import reframed
+from .smithsonian import cooper_hewitt, saam
 from .smk import smk
-from .wikimedia import holidays, louvre, posters, world_museums
+from .wallhaven import wallhaven
+from .wikimedia import holidays, illustrations, louvre, modern, popart, posters, ukiyoe, world_museums
 
 # Reframed first: its files are already 3840x2160.
 SOURCES = {
     source.id: source
-    for source in (reframed, artic, met, cleveland, smk, louvre, world_museums, holidays, posters, nasa)
+    for source in (
+        reframed, artic, met, cleveland, smk, louvre, world_museums,
+        # Modern, pop and illustrated work.
+        modern, popart, saam, cooper_hewitt, illustrations, pixabay, flickr, ukiyoe,
+        holidays, posters, nasa,
+        # Not license-verified: personal use, and off until switched on in Settings.
+        wallhaven, deviantart,
+    )
 }
 
 
@@ -45,6 +58,10 @@ def source_info(source):
         # Set when the usual "wide" starting filter would hide most of what it has.
         "default_shape": getattr(source, "default_shape", None),
         "tv_ready": source.id == "reframed",
+        # Not license-verified (personal use): the app keeps these off until asked.
+        "flagged": getattr(source, "flagged", False),
+        # Sources that need a key: Settings asks for it when the source is switched on.
+        "credentials": credentials.describe(getattr(source, "service", None)),
         "has_type_filter": getattr(source, "has_type_filter", source.id != "reframed"),
         # How eagerly it may be searched: heavy sources wait until typing has settled.
         "weight": getattr(source, "weight", "light"),

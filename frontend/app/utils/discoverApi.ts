@@ -26,6 +26,19 @@ export type DiscoverSource = {
   /** How long to wait after the last keystroke before searching this source. */
   search_delay_ms: number;
   status: SourceStatus;
+  /** Not license-verified (personal use): kept off until the person switches it on in Settings. */
+  flagged: boolean;
+  /** Set when the source needs a key or app credentials, entered in Settings. */
+  credentials: SourceCredentials | null;
+};
+
+export type SourceCredentials = {
+  service: string;
+  label: string;
+  help_url: string;
+  fields: { name: string; label: string }[];
+  /** True once every field is saved. The values themselves never come back from the server. */
+  configured: boolean;
 };
 
 export type SourceStatus = {
@@ -141,6 +154,20 @@ export async function searchArt(options: {
   });
   if (options.limit) params.set("limit", String(options.limit));
   return readJson(await fetch(`${API_BASE}/api/discover/search?${params}`));
+}
+
+export async function saveCredentials(service: string, values: Record<string, string>): Promise<SourceCredentials> {
+  return readJson(
+    await fetch(`${API_BASE}/api/discover/credentials/${encodeURIComponent(service)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(values),
+    })
+  );
+}
+
+export async function clearCredentials(service: string): Promise<SourceCredentials> {
+  return readJson(await fetch(`${API_BASE}/api/discover/credentials/${encodeURIComponent(service)}`, { method: "DELETE" }));
 }
 
 export type Highlights = { mood: string; items: Artwork[] };

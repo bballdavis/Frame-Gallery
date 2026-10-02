@@ -27,7 +27,8 @@ MOODS = [
     "river", "forest", "harbor", "flowers", "village", "coast",
 ]
 # The Met is left out: it does not list image sizes, and it is the costly source to ask.
-HERO_SOURCES = ("reframed", "artic", "cleveland", "smk", "louvre", "worldmuseums")
+# Only sources with a clear license go in the hero: never the flagged personal-use ones.
+HERO_SOURCES = ("reframed", "artic", "cleveland", "smk", "louvre", "worldmuseums", "saam", "modernart")
 PER_SOURCE = 2
 MAX_SLIDES = 12
 
@@ -66,8 +67,10 @@ def hero_url(art):
         return url.replace("/full/400,/", "/full/1400,/")
     if source == "smk":
         return url.replace("!480,", "!1400,")
-    if source in ("louvre", "worldmuseums"):
+    if source in ("louvre", "worldmuseums", "modernart", "popart", "illustrations", "ukiyoe"):
         return re.sub(r"/\d+px-", "/1280px-", url)
+    if source in ("saam", "cooperhewitt"):
+        return url.replace("&max=480", "&max=1600")
     return url
 
 

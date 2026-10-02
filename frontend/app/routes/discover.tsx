@@ -4,6 +4,7 @@ import { MagnifyingGlass as MagnifyingGlassIcon, XCircle as XCircleIcon } from "
 import AddToGalleryDialog, { NEW_ALBUM, type AddChoice } from "~/components/AddToGalleryDialog";
 import AllResults, { type Group } from "~/components/AllResults";
 import ArtworkCard from "~/components/ArtworkCard";
+import ArtworkViewer from "~/components/ArtworkViewer";
 import DiscoverFilters, { DEFAULT_FILTERS, NO_FILTERS, type Filters } from "~/components/DiscoverFilters";
 import DiscoverHero from "~/components/DiscoverHero";
 import ExploreGrid from "~/components/ExploreGrid";
@@ -11,7 +12,7 @@ import SourcePicker, { ALL_SOURCES } from "~/components/SourcePicker";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
-import { getDisabledSources } from "~/lib/discoverPrefs";
+import { isOptional, visibleSources } from "~/lib/discoverPrefs";
 import { exploreTiles, type ExploreTile } from "~/lib/explore";
 import { createAlbum, fetchAlbums } from "~/utils/galleryApi";
 import {
@@ -71,10 +72,10 @@ function remember(key: string, value: string) {
 export default function Discover() {
   const [allSources, setSources] = useState<DiscoverSource[]>([]);
   // Settings can switch sources off; they vanish from the picker, the grid and "all" searches.
+  // Optional sources (personal use, or needing a key) stay hidden unless switched on there.
   const sources = useMemo(() => {
-    const off = getDisabledSources();
-    const kept = allSources.filter((s) => !off.has(s.id));
-    return kept.length ? kept : allSources;
+    const kept = visibleSources(allSources);
+    return kept.length ? kept : allSources.filter((s) => !isOptional(s));
   }, [allSources]);
   const [season, setSeason] = useState("");
   // Which sources are resting or busy, kept apart so refreshing it never restarts a search.
@@ -112,6 +113,7 @@ export default function Discover() {
 
   // The artwork whose dialog is open, and the import that was confirmed (which carries on
   // in the background if the dialog is hidden).
+  const [viewing, setViewing] = useState<Artwork | null>(null);
   const [dialogArt, setDialogArt] = useState<Artwork | null>(null);
   const dialogArtRef = useRef<Artwork | null>(null);
   dialogArtRef.current = dialogArt;
@@ -506,6 +508,7 @@ export default function Discover() {
         sources={sources}
         collapsed={heroCollapsed}
         onAdd={openAdd}
+        onView={setViewing}
         onBrowse={chooseScope}
       />
 
@@ -601,6 +604,7 @@ export default function Discover() {
           groups={groups}
           added={added}
           onAdd={openAdd}
+          onView={setViewing}
           onSeeAll={chooseScope}
           onRetry={(id) => {
             const s = sources.find((x) => x.id === id);
@@ -677,6 +681,7 @@ export default function Discover() {
                     source={source}
                     added={added.has(keyOf(art))}
                     onAdd={openAdd}
+                    onView={setViewing}
                   />
                 ))}
             </div>
@@ -695,6 +700,17 @@ export default function Discover() {
         Artwork comes from museums and galleries that share it openly. Please check each source&apos;s terms before using
         it beyond your own home.
       </p>
+
+      <ArtworkViewer
+        artwork={viewing}
+        source={viewing ? (sources.find((s) => s.id === viewing.source) ?? null) : null}
+        added={viewing ? added.has(keyOf(viewing)) : false}
+        onAdd={(art) => {
+          setViewing(null);
+          openAdd(art);
+        }}
+        onClose={() => setViewing(null)}
+      />
 
       <AddToGalleryDialog
         open={dialogArt !== null}

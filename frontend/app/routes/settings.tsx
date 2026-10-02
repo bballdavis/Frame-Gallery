@@ -14,8 +14,114 @@ import { splitMatte } from '~/utils/matte';
 import { Switch } from '~/components/ui/switch';
 import { TvEditModal, type TV } from '~/components/TvEditModal';
 import SourceLogo from '~/components/SourceLogo';
-import { fetchSources, type DiscoverSource } from '~/utils/discoverApi';
-import { getCustomizeSources, getDisabledSources, setCustomizeSources, setDisabledSources } from '~/lib/discoverPrefs';
+import { clearCredentials, fetchSources, saveCredentials, type DiscoverSource } from '~/utils/discoverApi';
+import {
+  getCustomizeSources,
+  getDisabledSources,
+  getEnabledFlaggedSources,
+  isOptional,
+  setCustomizeSources,
+  setDisabledSources,
+  setEnabledFlaggedSources,
+} from '~/lib/discoverPrefs';
+
+/** One source that is off until chosen: a switch, and the key form once it is switched on. */
+function OptionalSource({
+  source,
+  on,
+  onToggle,
+  onSaved,
+}: {
+  source: DiscoverSource;
+  on: boolean;
+  onToggle: (next: boolean) => void;
+  onSaved: () => void;
+}) {
+  const creds = source.credentials;
+  const [values, setValues] = React.useState<Record<string, string>>({});
+  const [busy, setBusy] = React.useState(false);
+  const [problem, setProblem] = React.useState("");
+
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!creds) return;
+    setBusy(true);
+    setProblem("");
+    try {
+      await saveCredentials(creds.service, values);
+      setValues({});
+      onSaved();
+    } catch (e: any) {
+      setProblem(e.message || "Could not save the key");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!creds) return;
+    setBusy(true);
+    try {
+      await clearCredentials(creds.service);
+      onSaved();
+    } catch (e: any) {
+      setProblem(e.message || "Could not remove the key");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <li>
+      <label className="flex items-center gap-3">
+        <SourceLogo source={source} className="size-9" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-medium text-foreground">{source.name}</span>
+          <span className="block truncate text-sm text-muted-foreground">{source.tagline}</span>
+        </span>
+        <Switch checked={on} onCheckedChange={onToggle} aria-label={`Use ${source.name}`} />
+      </label>
+      {on && creds && (
+        <div className="mt-3 ml-12 rounded-xl border border-border bg-muted/40 p-3">
+          {creds.configured ? (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-foreground">{creds.label} key saved. It is kept on this server and never shown again.</p>
+              <Button type="button" variant="outline" size="sm" disabled={busy} onClick={remove}>
+                Remove key
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={save} className="flex flex-col gap-2">
+              <p className="text-sm text-muted-foreground">
+                {source.name} needs a free {creds.label} key before it shows up in Discover.{" "}
+                <a href={creds.help_url} target="_blank" rel="noreferrer" className="underline underline-offset-2 text-foreground">
+                  Get one
+                </a>
+              </p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                {creds.fields.map((field) => (
+                  <Input
+                    key={field.name}
+                    type="password"
+                    autoComplete="off"
+                    value={values[field.name] ?? ""}
+                    onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
+                    placeholder={field.label}
+                    aria-label={`${creds.label} ${field.label}`}
+                  />
+                ))}
+                <Button type="submit" disabled={busy || creds.fields.some((f) => !(values[f.name] ?? "").trim())}>
+                  Save
+                </Button>
+              </div>
+              {problem && <p className="text-sm text-destructive">{problem}</p>}
+            </form>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
 
 export default function Settings() {
   // TV state
@@ -47,10 +153,13 @@ export default function Settings() {
   const [discoverSources, setDiscoverSources] = React.useState<DiscoverSource[]>([]);
   const [customizeSources, setCustomizeSourcesState] = React.useState(false);
   const [disabledSources, setDisabledState] = React.useState<Set<string>>(new Set());
+  // Sources whose license is not verified are off until chosen here.
+  const [enabledFlagged, setEnabledFlaggedState] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     setCustomizeSourcesState(getCustomizeSources());
     setDisabledState(getDisabledSources());
+    setEnabledFlaggedState(getEnabledFlaggedSources());
     fetchSources().then(({ sources }) => setDiscoverSources(sources)).catch(() => setDiscoverSources([]));
   }, []);
 
@@ -71,6 +180,18 @@ export default function Settings() {
     setDisabledState(next);
     setDisabledSources(next);
   };
+
+  const handleToggleFlagged = (id: string, on: boolean) => {
+    const next = new Set(enabledFlagged);
+    if (on) next.add(id);
+    else next.delete(id);
+    setEnabledFlaggedState(next);
+    setEnabledFlaggedSources(next);
+  };
+
+  const verifiedSources = discoverSources.filter((s) => !isOptional(s));
+  const optionalSources = discoverSources.filter((s) => isOptional(s));
+  const reloadSources = () => fetchSources().then(({ sources }) => setDiscoverSources(sources)).catch(() => {});
 
   // Fetch TVs
   const fetchTvs = React.useCallback(async () => {
@@ -436,9 +557,9 @@ export default function Settings() {
           </label>
           {customizeSources && (
             <ul className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
-              {discoverSources.map((s) => {
+              {verifiedSources.map((s) => {
                 const on = !disabledSources.has(s.id);
-                const lastOn = on && discoverSources.length - disabledSources.size <= 1;
+                const lastOn = on && verifiedSources.filter((v) => !disabledSources.has(v.id)).length <= 1;
                 return (
                   <li key={s.id}>
                     <label className="flex items-center gap-3">
@@ -459,6 +580,28 @@ export default function Settings() {
               })}
               {discoverSources.length === 0 && <li className="text-sm text-muted-foreground">Could not load the sources.</li>}
             </ul>
+          )}
+          {optionalSources.length > 0 && (
+            <div className="mt-4 border-t border-border pt-4">
+              <h3 className="font-semibold text-foreground">More sources</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                These are off until you turn them on. Some need a free key from the site. The ones marked
+                "License not verified" do not say what their pictures may be used for, so every picture stays the
+                artist's own work: keep those to personal use. They are never in the daily highlights, and imports
+                still credit the artist and link back to the page.
+              </p>
+              <ul className="mt-3 flex flex-col gap-4">
+                {optionalSources.map((s) => (
+                  <OptionalSource
+                    key={s.id}
+                    source={s}
+                    on={enabledFlagged.has(s.id)}
+                    onToggle={(next) => handleToggleFlagged(s.id, next)}
+                    onSaved={reloadSources}
+                  />
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 

@@ -11,8 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlsplit
 
 from flask import Blueprint, Response, current_app, jsonify, request
-from models import Album, Image, db
-from utils.discover import SOURCES, configure, get_source, resolve_url, source_info
+from models import Album, Image, ProviderConfig, db
+from utils.discover import SOURCES, configure, credentials, get_source, resolve_url, source_info
 from utils.discover.aggregate import cached_search, filter_results, highlights
 from utils.discover.artic import AIC_HEADERS
 from utils.discover.common import (
@@ -51,6 +51,9 @@ THUMB_HOSTS = {
     "api.smk.dk", "iip.smk.dk", "iip-thumb.smk.dk", "open.smk.dk", "www.smk.dk",
     "upload.wikimedia.org", "thumb.wikimedia.org", "commons.wikimedia.org", "www.louvre.fr",
     "images-assets.nasa.gov", "images.nasa.gov",
+    "ids.si.edu", "americanart.si.edu", "www.cooperhewitt.org",
+    "live.staticflickr.com", "combo.staticflickr.com", "pixabay.com", "cdn.pixabay.com",
+    "wallhaven.cc", "th.wallhaven.cc", "w.wallhaven.cc",
 }
 THUMB_MAX_BYTES = 8 * 1024 * 1024
 THUMB_TTL_SECONDS = 7 * 24 * 3600
@@ -69,6 +72,70 @@ def _configure(state):
     app.extensions["discover_jobs"] = JobStore(os.path.join(cache_dir, "jobs"))
     app.config["DISCOVER_TMP"] = os.path.join(cache_dir, "tmp")
     os.makedirs(app.config["DISCOVER_TMP"], exist_ok=True)
+
+
+# --- Source keys, entered in Settings -------------------------------------------------
+
+PREFIX = "discover:"
+
+
+def _load_credentials():
+    rows = ProviderConfig.query.filter(ProviderConfig.provider.like(PREFIX + "%")).all()
+    values = {}
+    for row in rows:
+        service = row.provider[len(PREFIX):]
+        spec = credentials.SERVICES.get(service)
+        if not spec:
+            continue
+        names = [name for name, _ in spec["fields"]]
+        # One field lives in api_key; a second (DeviantArt's client ID) in host.
+        values[service] = {names[-1]: row.api_key or ""}
+        if len(names) > 1:
+            values[service][names[0]] = row.host or ""
+    credentials.replace_all(values)
+
+
+@discover_routes.before_request
+def _refresh_credentials():
+    if credentials.stale():
+        try:
+            _load_credentials()
+        except Exception:  # the table may not exist yet; sources then report a missing key
+            log.exception("Could not load the Discover keys")
+            db.session.rollback()
+            credentials.replace_all({})
+
+
+@discover_routes.route("/api/discover/credentials/<service>", methods=["PUT"])
+def api_discover_set_credentials(service):
+    spec = credentials.SERVICES.get(service)
+    if not spec:
+        raise DiscoverError("Unknown service", 404)
+    data = request.get_json(silent=True) or {}
+    names = [name for name, _ in spec["fields"]]
+    given = {name: str(data.get(name) or "").strip()[:200] for name in names}
+    if not all(given.values()):
+        raise DiscoverError("Fill in " + " and ".join(label for _, label in spec["fields"]))
+    row = ProviderConfig.query.filter_by(provider=PREFIX + service).first()
+    if not row:
+        row = ProviderConfig(provider=PREFIX + service)
+        db.session.add(row)
+    row.api_key = given[names[-1]]
+    row.host = given[names[0]] if len(names) > 1 else None
+    row.enabled = True
+    db.session.commit()
+    _load_credentials()
+    return jsonify(credentials.describe(service))
+
+
+@discover_routes.route("/api/discover/credentials/<service>", methods=["DELETE"])
+def api_discover_clear_credentials(service):
+    if service not in credentials.SERVICES:
+        raise DiscoverError("Unknown service", 404)
+    ProviderConfig.query.filter_by(provider=PREFIX + service).delete()
+    db.session.commit()
+    _load_credentials()
+    return jsonify(credentials.describe(service))
 
 
 @discover_routes.errorhandler(DiscoverError)

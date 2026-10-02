@@ -26,6 +26,14 @@ API = "https://commons.wikimedia.org/w/api.php"
 MIN_WIDTH = 2500
 MAX_PIXELS = 100_000_000   # beyond this Commons will not make a scaled copy
 OPEN_LICENSE = re.compile(r"^(public domain|cc0|pd\b|pdm|no restrictions)", re.IGNORECASE)
+# Living artists' work is rarely public domain, so some collections also take CC BY and
+# CC BY-SA (never the non-commercial or no-derivatives kinds). The artist is credited.
+CREDITED_LICENSE = re.compile(
+    r"^(public domain|cc0|pd\b|pdm|no restrictions|cc[- ]by(?![- ]?n[cd]))", re.IGNORECASE
+)
+# Anyone can upload to Commons, and the open art categories hold some adult work.
+# Left out of every search; a filter on words is a net, not a guarantee.
+ADULT_TERMS = "-hentai -erotic -erotica -nude -naked -nsfw -porn -sex -sexy -lingerie -topless"
 _METADATA = "LicenseShortName|Artist|ObjectName|DateTimeOriginal"
 
 
@@ -85,7 +93,6 @@ class CommonsCollection:
     support_label = "Support Wikimedia"
     support_name = "Wikimedia Commons"
     support_icon_url = "https://commons.wikimedia.org/static/favicon/commons.ico"
-    license_note = "Public domain"
     download_hosts = {"upload.wikimedia.org", "thumb.wikimedia.org"}
     has_type_filter = False
     # Only one collection claims pasted Commons links, so a link has one obvious home.
@@ -105,6 +112,8 @@ class CommonsCollection:
         default_shape=None,
         accepts_links=False,
         trust_artist_field=True,
+        licenses=OPEN_LICENSE,
+        license_note="Public domain",
     ):
         """A slice of Commons: everything under a category, or files matching some keywords.
 
@@ -114,6 +123,8 @@ class CommonsCollection:
         """
         self.id = id
         self.name = name
+        self.licenses = licenses
+        self.license_note = license_note
         self.short_name = short_name
         self.tagline = tagline
         self.category = category
@@ -158,7 +169,7 @@ class CommonsCollection:
         license_name = _text(meta.get("LicenseShortName"))
         width, height = info.get("width") or 0, info.get("height") or 0
         if (
-            not OPEN_LICENSE.match(license_name)
+            not self.licenses.match(license_name)
             or info.get("mime") not in ("image/jpeg", "image/png")
             or not width
             or width * height > MAX_PIXELS
@@ -196,8 +207,9 @@ class CommonsCollection:
 
     def search(self, query, page, paintings_only, shape):
         words = self._words(query) or self.default_query
+        # One category per collection: Commons returns nothing for an OR of two deep categories.
         scope = f'deepcategory:"{self.category}" ' if self.category else ""
-        search = f"{scope}{words} {self.keywords} filew:>{self.min_width} filetype:bitmap"
+        search = f"{scope}{words} {self.keywords} {ADULT_TERMS} filew:>{self.min_width} filetype:bitmap"
         data = self._request(
             {
                 "generator": "search",
@@ -230,14 +242,14 @@ class CommonsCollection:
     def get(self, item_id):
         item = self._normalise(self._page(item_id, 480))
         if not item:
-            raise DiscoverError("That file is not a public-domain image we can use", 404)
+            raise DiscoverError("That file is not an openly licensed image we can use", 404)
         return item
 
     def plan(self, item_id, fit):
         page = self._page(item_id, TARGET_WIDTH)
         item = self._normalise(page)
         if not item:
-            raise DiscoverError("That file is not a public-domain image we can use", 404)
+            raise DiscoverError("That file is not an openly licensed image we can use", 404)
         info = page["imageinfo"][0]
         scaled = info["width"] > TARGET_WIDTH and info.get("thumburl")
         width = TARGET_WIDTH if scaled else info["width"]
@@ -305,6 +317,65 @@ posters = CommonsCollection(
     icon_url=COMMONS_ICON,
     keywords="poster",
     default_query="travel",
+    min_width=2000,
+    default_shape="any",
+)
+
+# Modern work. Commons holds a great deal of digital art, pop art and illustration
+# uploaded by the artists themselves, usually as CC BY or CC BY-SA, so the artist's name
+# and the license travel with each import.
+CREDIT_NOTE = "Creative Commons (credit the artist)"
+
+modern = CommonsCollection(
+    id="modernart",
+    name="Digital art",
+    short_name="Wikimedia Commons",
+    tagline="Digital and contemporary art shared by the artists, via Wikimedia Commons",
+    icon_url=COMMONS_ICON,
+    category="Digital art",
+    default_query="colorful",
+    min_width=2500,
+    default_shape="any",
+    licenses=CREDITED_LICENSE,
+    license_note=CREDIT_NOTE,
+)
+
+popart = CommonsCollection(
+    id="popart",
+    name="Pop art",
+    short_name="Wikimedia Commons",
+    tagline="Pop art and pop-inspired work, via Wikimedia Commons",
+    icon_url=COMMONS_ICON,
+    category="Pop art",
+    default_query="color",
+    min_width=2000,
+    default_shape="any",
+    licenses=CREDITED_LICENSE,
+    license_note=CREDIT_NOTE,
+)
+
+illustrations = CommonsCollection(
+    id="illustrations",
+    name="Illustration & cartoons",
+    short_name="Wikimedia Commons",
+    tagline="Cute, bold and playful illustration art, via Wikimedia Commons",
+    icon_url=COMMONS_ICON,
+    category="Illustrations",
+    default_query="cute",
+    min_width=2500,
+    default_shape="any",
+    licenses=CREDITED_LICENSE,
+    license_note=CREDIT_NOTE,
+)
+
+ukiyoe = CommonsCollection(
+    id="ukiyoe",
+    name="Japanese woodblock prints",
+    short_name="Wikimedia Commons",
+    tagline="Ukiyo-e: waves, mountains, cats and kabuki, in the public domain, via Wikimedia Commons",
+    icon_url=COMMONS_ICON,
+    category="Ukiyo-e",
+    default_query="Hokusai",
     min_width=2000,
     default_shape="any",
 )

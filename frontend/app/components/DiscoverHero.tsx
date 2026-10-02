@@ -45,10 +45,11 @@ interface DiscoverHeroProps {
   /** Search has the focus, so the hero scrolls out of the way */
   collapsed: boolean;
   onAdd: (artwork: Artwork) => void;
+  onView: (artwork: Artwork) => void;
   onBrowse: (sourceId: string) => void;
 }
 
-export default function DiscoverHero({ items, sources, collapsed, onAdd, onBrowse }: DiscoverHeroProps) {
+export default function DiscoverHero({ items, sources, collapsed, onAdd, onView, onBrowse }: DiscoverHeroProps) {
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
@@ -127,7 +128,14 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onBrows
                     className="relative aspect-[4/3] w-full shrink-0 sm:aspect-[16/7]"
                   >
                     <HeroImage artwork={art} eager={position === 0} />
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-16 text-white sm:px-6 sm:pb-5">
+                    <button
+                      type="button"
+                      onClick={() => onView(art)}
+                      aria-label={`View ${art.title} full size`}
+                      className="absolute inset-0 cursor-zoom-in focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-white focus-visible:outline-none"
+                    />
+                    {/* Clicks pass through the text to the picture; only the buttons catch them. */}
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-16 text-white sm:px-6 sm:pb-5">
                       <div className="flex items-end justify-between gap-3">
                         <div className="min-w-0 max-w-xl">
                           {source && (
@@ -144,7 +152,7 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onBrows
                           </p>
                         </div>
                         {/* Stacked in the bottom-right corner, add on top, so they never push the text aside. */}
-                        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                        <div className="pointer-events-auto flex shrink-0 flex-col gap-2 sm:flex-row">
                           <Tooltip label="Add to gallery">
                             <Button
                               size="icon"

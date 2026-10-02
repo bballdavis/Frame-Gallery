@@ -647,3 +647,42 @@ def test_highlights_do_not_repeat_a_title_from_the_same_source():
     ids = [i["id"] for i in highlights(sources, today=datetime.date(2026, 11, 1))["items"]]
 
     assert ids == ["left", "other"]
+
+
+# --- Keys entered in Settings ---------------------------------------------------------
+
+
+def test_a_key_saved_in_settings_reaches_the_source_but_never_comes_back(client):
+    from utils.discover import credentials
+
+    credentials.replace_all({})
+    reply = client.put("/api/discover/credentials/flickr", json={"api_key": "  top-secret  "})
+
+    assert reply.status_code == 200 and reply.get_json()["configured"] is True
+    assert "top-secret" not in reply.get_data(as_text=True)
+    assert credentials.get("flickr") == "top-secret"   # trimmed
+
+    listing = client.get("/api/discover/sources").get_data(as_text=True)
+    assert "top-secret" not in listing
+    flickr = next(s for s in client.get("/api/discover/sources").get_json()["sources"] if s["id"] == "flickr")
+    assert flickr["credentials"]["configured"] is True
+
+    # The general providers API (Immich) must not expose, edit or delete Discover keys.
+    assert "top-secret" not in client.get("/api/providers").get_data(as_text=True)
+    assert client.get("/api/providers/discover:flickr").status_code == 404
+    assert client.delete("/api/providers/discover:flickr").status_code == 404
+
+    cleared = client.delete("/api/discover/credentials/flickr").get_json()
+    assert cleared["configured"] is False and credentials.get("flickr") == ""
+
+
+def test_a_service_with_two_fields_needs_both(client):
+    from utils.discover import credentials
+
+    credentials.replace_all({})
+    assert client.put("/api/discover/credentials/deviantart", json={"client_id": "abc"}).status_code == 400
+    reply = client.put("/api/discover/credentials/deviantart", json={"client_id": "abc", "client_secret": "xyz"})
+    assert reply.get_json()["configured"] is True
+    assert (credentials.get("deviantart", "client_id"), credentials.get("deviantart", "client_secret")) == ("abc", "xyz")
+    assert client.put("/api/discover/credentials/nope", json={"api_key": "x"}).status_code == 404
+    credentials.replace_all({})

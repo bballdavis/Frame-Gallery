@@ -1,4 +1,4 @@
-import { ArrowSquareOut as ArrowTopRightOnSquareIcon, Check as CheckIcon, DownloadSimple as ArrowDownTrayIcon } from "@phosphor-icons/react";
+import { ArrowSquareOut as ArrowTopRightOnSquareIcon, Check as CheckIcon, Plus as PlusIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import ArtworkImage from "./ArtworkImage";
 import FitBadge from "./FitBadge";
@@ -10,9 +10,10 @@ interface ArtworkCardProps {
   /** already added during this visit */
   added: boolean;
   onAdd: (artwork: Artwork) => void;
+  onView: (artwork: Artwork) => void;
 }
 
-export default function ArtworkCard({ artwork, source, added, onAdd }: ArtworkCardProps) {
+export default function ArtworkCard({ artwork, source, added, onAdd, onView }: ArtworkCardProps) {
   const by = [artwork.artist, artwork.date].filter(Boolean).join(" · ");
 
   return (
@@ -20,6 +21,12 @@ export default function ArtworkCard({ artwork, source, added, onAdd }: ArtworkCa
       {/* The tile is the shape of the TV, so it previews the picture as it would fill the screen. */}
       <div className="relative aspect-video overflow-hidden bg-neutral-900">
         <ArtworkImage artwork={artwork} />
+        <button
+          type="button"
+          onClick={() => onView(artwork)}
+          aria-label={`View ${artwork.title} full size`}
+          className="absolute inset-0 cursor-zoom-in focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/70 focus-visible:outline-none"
+        />
         <FitBadge artwork={artwork} />
       </div>
 
@@ -41,7 +48,7 @@ export default function ArtworkCard({ artwork, source, added, onAdd }: ArtworkCa
             onClick={() => onAdd(artwork)}
             aria-label={`${added ? "Added" : "Add to gallery"}: ${artwork.title}`}
           >
-            {added ? <CheckIcon aria-hidden="true" /> : <ArrowDownTrayIcon aria-hidden="true" />}
+            {added ? <CheckIcon aria-hidden="true" /> : <PlusIcon weight="regular" aria-hidden="true" />}
             {added ? "Added" : "Add to gallery"}
           </Button>
           <Button asChild size="icon-sm" variant="outline">

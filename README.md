@@ -72,11 +72,17 @@ The **Discover** tab searches free, high-resolution art and imports it straight 
 | [Holiday postcards](https://commons.wikimedia.org/) (Wikimedia Commons) | Public domain / CC0 only | Vintage Halloween, Christmas, Easter and other postcards. With nothing typed it shows whatever is in season. Mostly upright, so it starts without the Wide filter. |
 | [Vintage posters](https://commons.wikimedia.org/) (Wikimedia Commons) | Public domain / CC0 only | Travel posters, advertising and Art Nouveau prints. |
 | [NASA Image Library](https://images.nasa.gov/) | NASA, free to use | Nebulae, planets and Earth from orbit. Originals are used, and anything under 1600 px wide is left out. |
+| Digital art, Pop art, Illustration (Wikimedia Commons) | CC0, CC BY, CC BY-SA or public domain | Modern work shared by the artists themselves. The artist and license are recorded with each import. Never the non-commercial or no-derivatives licenses. |
+| [Japanese woodblock prints](https://commons.wikimedia.org/) (Wikimedia Commons) | Public domain / CC0 only | Ukiyo-e: waves, mountains, cats and kabuki. |
+| [Modern American art and Design & posters](https://www.si.edu/openaccess) (Smithsonian) | Public domain (CC0) | American Art Museum and Cooper Hewitt, at full resolution. Needs a free key. |
+| [Flickr](https://www.flickr.com/creativecommons/) | CC0, CC BY, CC BY-SA, public domain | Search by tag or title across freely licensed photography and street art. Needs a free key. |
+| [Pixabay illustrations](https://pixabay.com/illustrations/) | Pixabay Content License | Cute, colorful illustration. A free key returns files up to 1280 px; Pixabay can approve a key for full-size files. |
+| [Wallhaven](https://wallhaven.cc/) and [DeviantArt](https://www.deviantart.com/) | **License not verified (personal use)** | Huge, well-tagged libraries of independent art, but neither records a reusable license. They are flagged, **off by default** (turn them on under Settings, Discover, More sources), and never in the daily highlights. Wallhaven needs no key; DeviantArt needs a free app (client ID and secret) and offers only art the artist made downloadable. |
 
 - **Framing**: *Fill the screen* crops to 16:9 (tiles preview exactly what you will get, with the share lost shown on each); *Whole artwork* keeps every edge and lets the TV add a matte. The **Shape** filter narrows results to *Landscape* (wider than tall), *Wide* (close to 16:9, the default) or *No matte needed* (already 16:9 within 3%, so nothing is cropped or padded).
 - **Albums**: choose an album before adding, or create one.
 - **Supporting the sources**: while an artwork downloads, the progress window points to the source's support page. These collections are free because their institutions choose to share them.
-- **No keys or accounts** are needed for any source.
+- **Keys**: most sources need no key or account. Smithsonian, Flickr, Pixabay and DeviantArt need a free one: switch the source on under **Settings, Discover, More sources** and paste the key there. It is stored on your server, never shown again, and the source appears in Discover once it is saved.
 
 Set `DISCOVER_CONTACT` (an email or URL) to tell the Art Institute who is making requests, as its API documentation asks. Thanks to the creator of Reframed for the great tool. Please tip them!
 

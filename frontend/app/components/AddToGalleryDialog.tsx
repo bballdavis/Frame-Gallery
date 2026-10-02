@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, Progress } from "radix-ui";
 import { Link } from "react-router";
 import { ArrowSquareOut as ArrowTopRightOnSquareIcon, CheckCircle as CheckCircleIcon, Heart as HeartIcon, Warning as ExclamationTriangleIcon, X as XMarkIcon } from "@phosphor-icons/react";
@@ -109,50 +109,13 @@ export default function AddToGalleryDialog({
       ? qualityNote(job!)
       : job?.message || "Getting ready…";
 
-  // Preview in the picture's own shape (4:3 when unknown), with the 16:9 crop drawn over it.
-  const aspect = artwork.aspect ?? (artwork.width && artwork.height ? artwork.width / artwork.height : null);
-  const previewAspect = aspect ? Math.min(Math.max(aspect, 0.25), 4) : 4 / 3;
-  const TV = 16 / 9;
-  const cropBox =
-    aspect && Math.abs(aspect - TV) > 0.02
-      ? aspect >= TV
-        ? { height: "100%", width: `${(TV / previewAspect) * 100}%` }
-        : { width: "100%", height: `${(previewAspect / TV) * 100}%` }
-      : null;
-  const shape = !aspect ? null : aspect > 1.05 ? "Landscape" : aspect < 0.95 ? "Portrait" : "Square";
-  let domain = "";
-  try {
-    domain = new URL(artwork.page_url).hostname.replace(/^www\./, "");
-  } catch {
-    // No usable page address.
-  }
-  const details: [string, ReactNode][] = [
-    ["Source", source.name],
-    ...(domain
-      ? ([
-          [
-            "Page",
-            <a key="page" href={artwork.page_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-              {domain}
-            </a>,
-          ],
-        ] as [string, ReactNode][])
-      : []),
-    ...(artwork.width && artwork.height ? ([["Resolution", `${artwork.width} × ${artwork.height}`]] as [string, string][]) : []),
-    ...(shape ? ([["Shape", shape]] as [string, string][]) : []),
-    ...(artwork.date ? ([["Date", artwork.date]] as [string, string][]) : []),
-    ...(artwork.license ? ([["License", artwork.license]] as [string, string][]) : []),
-  ];
-
   const canConfirm = albumId !== NEW_ALBUM || newAlbumName.trim().length > 0;
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => !next && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        <Dialog.Content
-          className={`fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] ${started ? "max-w-md" : "max-w-3xl"} -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-card p-6 text-foreground shadow-xl focus:outline-none`}
-        >
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-card p-6 text-foreground shadow-xl focus:outline-none">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <Dialog.Title className="text-lg font-semibold">{heading}</Dialog.Title>
@@ -178,35 +141,14 @@ export default function AddToGalleryDialog({
               className="space-y-5"
             >
               <div>
-                {/* The whole picture, in its own shape, as large as the dialog allows. */}
-                <div className="flex justify-center rounded-md bg-neutral-900">
-                  <div
-                    className="relative overflow-hidden"
-                    style={{ aspectRatio: previewAspect, width: `min(100%, calc(60dvh * ${previewAspect}))` }}
-                  >
-                    <ArtworkImage artwork={artwork} fit="contain" lazy={false} />
-                    {effectiveFraming === "fill" && cropBox && (
-                      <div
-                        aria-hidden="true"
-                        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-sm border-2 border-dashed border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
-                        style={cropBox}
-                      />
-                    )}
-                  </div>
+                <div className="relative aspect-video overflow-hidden rounded-md bg-neutral-900">
+                  <ArtworkImage artwork={artwork} fit={effectiveFraming === "whole" ? "contain" : "cover"} lazy={false} />
                 </div>
                 <p className="mt-1.5 text-xs text-muted-foreground">
-                  {effectiveFraming === "whole" || !cropBox
-                    ? "The whole artwork. The TV shows it with a matte."
-                    : "The whole artwork. The dashed frame is what fills the TV screen."}
+                  {effectiveFraming === "whole"
+                    ? "Preview: the whole artwork. The TV shows it with a matte."
+                    : "Preview: how it fills the screen."}
                 </p>
-                <dl className="mt-2 flex flex-wrap gap-x-5 gap-y-1 rounded-md bg-muted/40 px-3 py-2 text-xs">
-                  {details.map(([label, value]) => (
-                    <div key={label} className="flex gap-1.5">
-                      <dt className="text-muted-foreground">{label}</dt>
-                      <dd className="font-medium text-foreground">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
               </div>
 
               <FitCriteriaList artwork={artwork} />

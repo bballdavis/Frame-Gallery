@@ -32,6 +32,16 @@ READ_TIMEOUT = 30
 MAX_DOWNLOAD_BYTES = 120 * 1024 * 1024
 
 
+class HostSuffixes:
+    """Download hosts that are named by their ending, for CDNs with many subdomains."""
+
+    def __init__(self, *suffixes):
+        self.suffixes = tuple(suffixes)
+
+    def __contains__(self, host):
+        return bool(host) and host.endswith(self.suffixes)
+
+
 def http_get(url, *, stream=False, params=None, headers=None, allowed_hosts=None):
     """GET with the project user agent and uniform error handling."""
     merged = {"User-Agent": USER_AGENT}

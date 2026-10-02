@@ -26,13 +26,14 @@ interface AllResultsProps {
   groups: Record<string, Group>;
   added: Set<string>;
   onAdd: (artwork: Artwork) => void;
+  onView: (artwork: Artwork) => void;
   /** Open one source with the same search */
   onSeeAll: (sourceId: string) => void;
   onRetry: (sourceId: string) => void;
 }
 
 /** Results from every source, a few from each, filling in as each source answers. */
-export default function AllResults({ sources, groups, added, onAdd, onSeeAll, onRetry }: AllResultsProps) {
+export default function AllResults({ sources, groups, added, onAdd, onView, onSeeAll, onRetry }: AllResultsProps) {
   const visible = sources.filter((s) => groups[s.id]);
   const quiet = visible.filter((s) => {
     const group = groups[s.id];
@@ -113,7 +114,7 @@ export default function AllResults({ sources, groups, added, onAdd, onSeeAll, on
                 }`}
               >
                 {group.results.map((art) => (
-                  <ArtworkCard key={keyOf(art)} artwork={art} source={source} added={added.has(keyOf(art))} onAdd={onAdd} />
+                  <ArtworkCard key={keyOf(art)} artwork={art} source={source} added={added.has(keyOf(art))} onAdd={onAdd} onView={onView} />
                 ))}
               </div>
             )}

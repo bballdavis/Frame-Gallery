@@ -40,8 +40,10 @@ class FakeNet:
         """handler is a FakeResponse or a callable(url, params, json, headers) -> FakeResponse."""
         self.routes.append((fragment, handler))
 
-    def _dispatch(self, method, url, params=None, json=None, headers=None):
-        self.calls.append({"method": method, "url": url, "params": params, "json": json, "headers": headers})
+    def _dispatch(self, method, url, params=None, json=None, headers=None, data=None):
+        self.calls.append(
+            {"method": method, "url": url, "params": params, "json": json, "headers": headers, "data": data}
+        )
         for fragment, handler in self.routes:
             if fragment in url:
                 response = handler(url, params, json, headers) if callable(handler) else handler
@@ -52,8 +54,8 @@ class FakeNet:
     def get(self, url, params=None, headers=None, stream=False, timeout=None):
         return self._dispatch("GET", url, params=params, headers=headers)
 
-    def post(self, url, json=None, headers=None, timeout=None):
-        return self._dispatch("POST", url, json=json, headers=headers)
+    def post(self, url, json=None, data=None, headers=None, timeout=None):
+        return self._dispatch("POST", url, json=json, headers=headers, data=data)
 
     def install(self, monkeypatch):
         monkeypatch.setattr(requests, "get", self.get)

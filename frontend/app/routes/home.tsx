@@ -10,6 +10,7 @@ import {
   type MonthlyCount,
 } from "~/utils/galleryApi";
 import HomeHero, { type HeroSlide } from "~/components/HomeHero";
+import { fetchHighlights } from "~/utils/discoverApi";
 
 type AlbumSummary = { id: number; name: string; images: string[] };
 
@@ -213,6 +214,28 @@ export default function Home() {
   const [details, setDetails] = useState<Record<string, ImageProvenance>>({});
   const [months, setMonths] = useState<MonthlyCount[]>([]);
   const [loading, setLoading] = useState(true);
+  // One random picture from Discover, so the hero also shows something new from outside the library.
+  const [discoverSlide, setDiscoverSlide] = useState<HeroSlide | null>(null);
+
+  useEffect(() => {
+    // It only decorates the page: if Discover is unreachable or empty the hero just has no extra slide.
+    fetchHighlights()
+      .then(({ items }) => {
+        const pick = shuffled(items.filter((art) => art.hero_url || art.thumb_url))[0];
+        if (!pick) return;
+        setDiscoverSlide({
+          key: `discover:${pick.source}:${pick.id}`,
+          topic: "From Discover",
+          filename: "",
+          imageUrl: pick.hero_url || pick.thumb_url,
+          title: pick.title,
+          subtitle: pick.artist,
+          to: "/discover",
+          action: "Open Discover",
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -234,7 +257,9 @@ export default function Home() {
   }, []);
 
   // Shuffled once per visit, not on every render.
-  const slides = useMemo(() => (loading ? null : buildSlides(images, albums, details)), [loading, images, albums, details]);
+  const ownSlides = useMemo(() => (loading ? null : buildSlides(images, albums, details)), [loading, images, albums, details]);
+  // The Discover picture joins when it arrives, without reshuffling the library slides.
+  const slides = useMemo(() => (ownSlides && discoverSlide ? [...ownSlides, discoverSlide] : ownSlides), [ownSlides, discoverSlide]);
 
   const thisMonth = months.length > 0 ? months[months.length - 1].count : 0;
   const lastMonth = months.length > 1 ? months[months.length - 2].count : 0;
