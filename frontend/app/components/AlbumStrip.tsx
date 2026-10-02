@@ -1,24 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog } from "radix-ui";
+import { Link } from "react-router";
+import { Dialog, Popover } from "radix-ui";
 import {
-  MagnifyingGlassIcon,
+  FunnelIcon,
   PencilSquareIcon,
   PhotoIcon,
   PlusIcon,
   Squares2X2Icon,
   TrashIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Tooltip } from "./ui/tooltip";
 import { getUploadUrl } from "~/utils/galleryApi";
 
 export type Album = { id: string; name: string; images: string[] };
-
-/** More than this and the desktop row offers the full list, with a filter. */
-const ROW_LIMIT = 8;
-/** A phone shows a 2×2 grid: four albums, or three and a "more" square. */
-const GRID_LIMIT = 4;
 
 const cornerButton =
   "inline-flex size-7 items-center justify-center rounded-full bg-black/45 text-white shadow-sm backdrop-blur-sm transition-colors hover:bg-black/65 focus-visible:ring-[3px] focus-visible:ring-white/70 focus-visible:outline-none";
@@ -91,7 +87,7 @@ interface AlbumTileProps {
 }
 
 /** One album as a picture tile: tap to show its images below; rename and delete sit in the top-right corner. */
-function AlbumTile({ album, active, onSelect, onRename, onDelete, className }: AlbumTileProps) {
+export function AlbumTile({ album, active, onSelect, onRename, onDelete, className }: AlbumTileProps) {
   const image = useRandomImage(album.images);
   return (
     <div
@@ -130,13 +126,12 @@ function AlbumTile({ album, active, onSelect, onRename, onDelete, className }: A
   );
 }
 
-/** The last square of the phone grid (and the end of the desktop row): opens every album. */
-function MoreTile({ albums, count, onClick, className }: { albums: Album[]; count: number; onClick: () => void; className: string }) {
+/** The last square of the grid (and the end of the desktop row): the Albums page, which lists them all. */
+function MoreTile({ albums, count, className }: { albums: Album[]; count: number; className: string }) {
   const image = useRandomImage(albums.flatMap((a) => a.images));
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Link
+      to="/albums"
       className={`group relative isolate overflow-hidden rounded-xl bg-neutral-900 text-white shadow-xs transition-shadow hover:shadow-lg focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${className}`}
     >
       <TileBackdrop image={image} />
@@ -145,8 +140,24 @@ function MoreTile({ albums, count, onClick, className }: { albums: Album[]; coun
       <span className="relative flex size-full flex-col items-center justify-center gap-1">
         <Squares2X2Icon className="size-6" aria-hidden="true" />
         <span className="text-sm font-semibold">+{count} more</span>
-        <span className="text-xs text-white/75">See all albums</span>
+        <span className="text-xs text-white/75">All albums</span>
       </span>
+    </Link>
+  );
+}
+
+/** The square that adds an album. It takes the place of a missing fourth tile, so the grid stays balanced. */
+function AddTile({ onClick, className }: { onClick: () => void; className: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border bg-card/50 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-selection/40 hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none ${className}`}
+    >
+      <span className="inline-flex size-9 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-primary/10">
+        <PlusIcon className="size-5" aria-hidden="true" />
+      </span>
+      <span className="text-sm font-medium">New album</span>
     </button>
   );
 }
@@ -163,46 +174,54 @@ interface AlbumStripProps {
   loading?: boolean;
 }
 
+/** Only this many albums are shown; the Albums page holds the rest. */
+const SHOWN = 4;
+
+export const iconButton =
+  "relative inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none";
+
 /**
- * Albums at the top of the gallery, so they stay in reach however many images there are.
- * A phone gets a compact 2×2 grid; wider screens a single scrolling row. With more albums
- * than fit, a "more" tile (and "See all") opens the full list.
+ * The largest few albums at the top of the gallery, so they stay in reach however many images
+ * there are. Empty albums are hidden until asked for. A phone gets a 2×2 grid that is always
+ * full: a "more" square (to the Albums page) when there are extras, an "add" square when there
+ * are fewer than four. Wider screens get the same albums in one row.
  */
 export default function AlbumStrip({ albums, activeId, onSelect, onCreate, onRename, onDelete, loading }: AlbumStripProps) {
-  const [showAll, setShowAll] = useState(false);
-  const [filter, setFilter] = useState("");
-  useEffect(() => {
-    if (!showAll) setFilter("");
-  }, [showAll]);
+  const [showEmpty, setShowEmpty] = useState(false);
 
+  const emptyCount = albums.filter((a) => a.images.length === 0).length;
+  // Biggest first; the sort is stable, so equal albums keep their order.
+  const visible = useMemo(
+    () => [...albums].filter((a) => showEmpty || a.images.length > 0 || String(a.id) === activeId).sort((a, b) => b.images.length - a.images.length),
+    [albums, showEmpty, activeId]
+  );
+  const overflow = visible.length > SHOWN;
+  const hiddenCount = visible.length - SHOWN;
+
+  // The album being viewed is always in view: if it is not among the largest, it takes the last place.
+  function pick(count: number) {
+    const first = visible.slice(0, count);
+    const active = visible.find((a) => String(a.id) === activeId);
+    return !active || first.includes(active) ? first : [...first.slice(0, count - 1), active];
+  }
+  const phoneAlbums = pick(overflow ? SHOWN - 1 : SHOWN);
+  const rowAlbums = pick(SHOWN);
+  const needsAdd = visible.length < SHOWN;
   const toggle = (id: string) => onSelect(activeId === id ? null : id);
-  const tile = (album: Album, className: string, afterSelect?: () => void) => (
+  const tile = (album: Album, className: string) => (
     <AlbumTile
       key={album.id}
       album={album}
       active={activeId === String(album.id)}
-      onSelect={() => {
-        toggle(String(album.id));
-        afterSelect?.();
-      }}
+      onSelect={() => toggle(String(album.id))}
       onRename={() => onRename(album)}
       onDelete={() => onDelete(album)}
       className={className}
     />
   );
-  const filtered = albums.filter((a) => a.name.toLowerCase().includes(filter.trim().toLowerCase()));
-
-  // The phone grid always shows the album being viewed, moving it to the front if it would be hidden.
-  const gridOverflows = albums.length > GRID_LIMIT;
-  const gridAlbums = useMemo(() => {
-    const room = gridOverflows ? GRID_LIMIT - 1 : GRID_LIMIT;
-    const first = albums.slice(0, room);
-    const active = albums.find((a) => String(a.id) === activeId);
-    if (!active || first.includes(active)) return first;
-    return [active, ...first.slice(0, room - 1)];
-  }, [albums, activeId, gridOverflows]);
-
   const rowTile = "w-52 shrink-0 snap-start aspect-[16/10]";
+  // Three tiles in a two-column grid leave a gap, so the add square then fills the row.
+  const addSpan = (phoneAlbums.length + 1) % 2 === 1 ? "col-span-2 h-24" : "aspect-square";
 
   return (
     <section aria-labelledby="albums-heading" className="mb-6">
@@ -210,17 +229,55 @@ export default function AlbumStrip({ albums, activeId, onSelect, onCreate, onRen
         <h2 id="albums-heading" className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Albums{albums.length > 0 && <span className="ml-1.5 font-normal tabular-nums">{albums.length}</span>}
         </h2>
-        <div className="flex items-center gap-1">
-          {/* Phones have the "more" square instead */}
-          {albums.length > ROW_LIMIT && (
-            <Button type="button" variant="ghost" size="sm" onClick={() => setShowAll(true)} className="hidden sm:inline-flex">
+        <div className="flex items-center gap-2">
+          {albums.length > SHOWN && (
+            <Link to="/albums" className="hidden text-sm text-primary hover:underline sm:inline">
               See all
-            </Button>
+            </Link>
           )}
-          <Button type="button" variant="outline" size="sm" onClick={onCreate}>
-            <PlusIcon aria-hidden="true" />
-            New album
-          </Button>
+          {emptyCount > 0 && (
+            <Popover.Root>
+              <Tooltip label={showEmpty ? "Filter albums: showing empty ones too" : "Filter albums: empty ones are hidden"}>
+                <Popover.Trigger
+                  className={`${iconButton} ${!showEmpty ? "border-primary/60 bg-selection text-selection-foreground" : ""}`}
+                  aria-label={!showEmpty ? "Filter albums, 1 filter applied" : "Filter albums"}
+                >
+                  <FunnelIcon className="size-5" aria-hidden="true" />
+                  {!showEmpty && <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-primary" aria-hidden="true" />}
+                </Popover.Trigger>
+              </Tooltip>
+              <Popover.Portal>
+                <Popover.Content
+                  align="end"
+                  sideOffset={6}
+                  collisionPadding={12}
+                  className="z-50 w-64 rounded-lg border border-border bg-popover p-4 text-sm text-popover-foreground shadow-lg focus:outline-none"
+                >
+                  <label className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 size-4 accent-primary"
+                      checked={showEmpty}
+                      onChange={(e) => setShowEmpty(e.target.checked)}
+                    />
+                    <span>
+                      Show empty albums ({emptyCount})
+                      <span className="mt-0.5 block text-xs text-muted-foreground">Hidden by default so the albums with pictures come first.</span>
+                    </span>
+                  </label>
+                  <Popover.Arrow className="fill-popover" />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          )}
+          {/* The add square takes over this job whenever it is on show */}
+          {!needsAdd && (
+            <Tooltip label="New album">
+              <button type="button" className={iconButton} onClick={onCreate} aria-label="New album">
+                <PlusIcon className="size-5" aria-hidden="true" />
+              </button>
+            </Tooltip>
+          )}
         </div>
       </div>
 
@@ -232,7 +289,7 @@ export default function AlbumStrip({ albums, activeId, onSelect, onCreate, onRen
             ))}
           </div>
           <div className="hidden gap-3 overflow-hidden sm:flex">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <span key={i} className={`block animate-pulse rounded-xl bg-accent ${rowTile}`} />
             ))}
           </div>
@@ -250,61 +307,19 @@ export default function AlbumStrip({ albums, activeId, onSelect, onCreate, onRen
         <>
           {/* Phone: a 2×2 grid of squares */}
           <div className="grid grid-cols-2 gap-3 sm:hidden">
-            {gridAlbums.map((album) => tile(album, "aspect-square"))}
-            {gridOverflows && (
-              <MoreTile
-                albums={albums.filter((a) => !gridAlbums.includes(a))}
-                count={albums.length - gridAlbums.length}
-                onClick={() => setShowAll(true)}
-                className="aspect-square"
-              />
-            )}
+            {phoneAlbums.map((album) => tile(album, "aspect-square"))}
+            {overflow && <MoreTile albums={visible.slice(SHOWN - 1)} count={visible.length - (SHOWN - 1)} className="aspect-square" />}
+            {needsAdd && <AddTile onClick={onCreate} className={addSpan} />}
           </div>
 
-          {/* Tablet and up: one scrolling row; p-1 leaves room for the selected ring */}
+          {/* Tablet and up: one row; p-1 leaves room for the selected ring */}
           <div className="-m-1 hidden snap-x gap-3 overflow-x-auto p-1 pb-2 [scrollbar-width:thin] sm:flex">
-            {albums.slice(0, ROW_LIMIT).map((album) => tile(album, rowTile))}
-            {albums.length > ROW_LIMIT && (
-              <MoreTile
-                albums={albums.slice(ROW_LIMIT)}
-                count={albums.length - ROW_LIMIT}
-                onClick={() => setShowAll(true)}
-                className={`${rowTile} w-40`}
-              />
-            )}
+            {rowAlbums.map((album) => tile(album, rowTile))}
+            {overflow && <MoreTile albums={visible.slice(SHOWN)} count={hiddenCount} className={`${rowTile} w-40`} />}
+            {needsAdd && <AddTile onClick={onCreate} className={`${rowTile} w-40`} />}
           </div>
         </>
       )}
-
-      <Dialog.Root open={showAll} onOpenChange={setShowAll}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex max-h-[min(40rem,calc(100dvh-2rem))] w-[min(42rem,calc(100vw-1.5rem))] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl border border-border bg-card p-5 text-card-foreground shadow-lg focus:outline-none">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <Dialog.Title className="text-base font-semibold">All albums ({albums.length})</Dialog.Title>
-              <Dialog.Close className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Close">
-                <XMarkIcon className="size-5" />
-              </Dialog.Close>
-            </div>
-            <Dialog.Description className="sr-only">Pick an album to show its images, or rename or delete one.</Dialog.Description>
-            <div className="relative mb-3">
-              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-              <Input
-                type="search"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                placeholder="Find an album"
-                aria-label="Find an album"
-                className="pl-9"
-              />
-            </div>
-            <div className="-m-1 grid flex-1 grid-cols-2 content-start gap-3 overflow-y-auto p-1 sm:grid-cols-3">
-              {filtered.map((album) => tile(album, "aspect-[4/3]", () => setShowAll(false)))}
-              {filtered.length === 0 && <p className="col-span-full text-sm text-muted-foreground">No album matches “{filter}”.</p>}
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
     </section>
   );
 }

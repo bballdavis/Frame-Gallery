@@ -128,7 +128,7 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onBrows
                   >
                     <HeroImage artwork={art} eager={position === 0} />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-16 text-white sm:px-6 sm:pb-5">
-                      <div className="flex flex-wrap items-end justify-between gap-3">
+                      <div className="flex items-end justify-between gap-3">
                         <div className="min-w-0 max-w-xl">
                           {source && (
                             <p className="mb-1.5 flex items-center gap-2 text-xs font-medium text-white/90">
@@ -143,8 +143,9 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onBrows
                             {[art.artist, art.date].filter(Boolean).join(" · ")}
                           </p>
                         </div>
-                        <div className="flex gap-2">
-                          <Tooltip label="Add to gallery">
+                        {/* Stacked in the bottom-right corner, add on top, so they never push the text aside. */}
+                        <div className="flex shrink-0 flex-col gap-2">
+                          <Tooltip label="Add to gallery" side="left">
                             <Button
                               size="icon"
                               className="rounded-full bg-white text-neutral-950 hover:bg-white/90"
@@ -155,7 +156,7 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onBrows
                             </Button>
                           </Tooltip>
                           {source && (
-                            <Tooltip label={`More from ${source.short_name.replace(/^the /i, "")}`}>
+                            <Tooltip label={`More from ${source.short_name.replace(/^the /i, "")}`} side="left">
                               <Button
                                 size="icon"
                                 variant="outline"

@@ -1,3 +1,26 @@
+import {
+  Bird,
+  Buildings,
+  Egg,
+  Fish,
+  FlowerLotus,
+  FlowerTulip,
+  ForkKnife,
+  Ghost,
+  Heart,
+  Leaf,
+  Mountains,
+  Palette,
+  Park,
+  Planet,
+  Snowflake,
+  Sun,
+  Train,
+  TreeEvergreen,
+  Waves,
+  type Icon,
+} from "@phosphor-icons/react";
+
 /** The topics offered under the search bar on Discover. */
 export type ExploreTile = {
   id: string;
@@ -7,7 +30,8 @@ export type ExploreTile = {
   query: string;
   /** Search one source instead of all of them, where a topic really lives in one place. */
   scope?: string;
-  emoji: string;
+  /** A duotone line icon, drawn in the chip's own text colour so it takes the gradient's mood. */
+  icon: Icon;
   /** Tailwind classes for the gradient: muted earth tones from the brand palette, dark enough for white text. */
   gradient: string;
 };
@@ -18,7 +42,7 @@ const TOPICS: ExploreTile[] = [
     label: "Landscapes",
     blurb: "Fields, valleys and open sky",
     query: "landscape",
-    emoji: "🏞️",
+    icon: Park,
     gradient: "from-[#7A9573] to-[#44624D]",
   },
   {
@@ -26,7 +50,7 @@ const TOPICS: ExploreTile[] = [
     label: "Seascapes",
     blurb: "Harbors, waves and coastlines",
     query: "seascape",
-    emoji: "🌊",
+    icon: Waves,
     gradient: "from-[#6C8CAA] to-[#3A5573]",
   },
   {
@@ -34,7 +58,7 @@ const TOPICS: ExploreTile[] = [
     label: "Flowers",
     blurb: "Gardens and still life blooms",
     query: "flowers",
-    emoji: "🌸",
+    icon: FlowerLotus,
     gradient: "from-[#BB7080] to-[#76404F]",
   },
   {
@@ -42,7 +66,7 @@ const TOPICS: ExploreTile[] = [
     label: "Mountains",
     blurb: "Peaks, alpine light and mist",
     query: "mountains",
-    emoji: "🏔️",
+    icon: Mountains,
     gradient: "from-[#6F788C] to-[#3D4457]",
   },
   {
@@ -51,7 +75,7 @@ const TOPICS: ExploreTile[] = [
     blurb: "Nebulae and planets, from NASA",
     query: "nebula",
     scope: "nasa",
-    emoji: "🪐",
+    icon: Planet,
     gradient: "from-[#66537F] to-[#2F2A45]",
   },
   {
@@ -60,7 +84,7 @@ const TOPICS: ExploreTile[] = [
     blurb: "Retro travel and advertising art",
     query: "travel",
     scope: "posters",
-    emoji: "🚂",
+    icon: Train,
     gradient: "from-[#BC6A51] to-[#7C3F36]",
   },
   {
@@ -68,7 +92,7 @@ const TOPICS: ExploreTile[] = [
     label: "Impressionism",
     blurb: "Soft light, loose brushwork",
     query: "Impressionism",
-    emoji: "🎨",
+    icon: Palette,
     gradient: "from-[#B98A38] to-[#7B5522]",
   },
   {
@@ -76,7 +100,7 @@ const TOPICS: ExploreTile[] = [
     label: "Japanese prints",
     blurb: "Woodblock waves and mountains",
     query: "Hokusai",
-    emoji: "🏯",
+    icon: Fish,
     gradient: "from-[#A5524B] to-[#5E2C30]",
   },
   {
@@ -84,7 +108,7 @@ const TOPICS: ExploreTile[] = [
     label: "Animals",
     blurb: "Birds, horses and company",
     query: "animals",
-    emoji: "🦊",
+    icon: Bird,
     gradient: "from-[#91914F] to-[#57603A]",
   },
   {
@@ -92,7 +116,7 @@ const TOPICS: ExploreTile[] = [
     label: "Cityscapes",
     blurb: "Streets, bridges and lamplight",
     query: "city street",
-    emoji: "🌆",
+    icon: Buildings,
     gradient: "from-[#5F8A8C] to-[#33555B]",
   },
 ];
@@ -102,19 +126,19 @@ const TOPICS: ExploreTile[] = [
  * out Easter and Thanksgiving for the year); the holiday postcards source answers all of them.
  */
 const SEASONS: Record<string, Omit<ExploreTile, "id">> = {
-  winter: season("Winter", "Snow, frost and quiet light", "winter", "❄️", "from-[#7592A8] to-[#3F586D]"),
-  valentine: season("Valentine’s Day", "Hearts, roses and vintage valentines", "valentine", "💘", "from-[#C0707F] to-[#78404F]"),
-  easter: season("Easter", "Spring, blossom and vintage cards", "easter", "🐣", "from-[#8FA06D] to-[#51684A]"),
-  spring: season("Spring", "Blossom, orchards and new green", "spring", "🌷", "from-[#7FA070] to-[#466A4C]"),
-  summer: season("Summer", "Beaches, meadows and long days", "summer", "☀️", "from-[#C69A3E] to-[#8A5A26]"),
-  autumn: season("Autumn", "Harvest colours and falling leaves", "autumn", "🍂", "from-[#B96F3F] to-[#74402A]"),
-  halloween: season("Halloween", "Spooky art and vintage postcards", "halloween", "🎃", "from-[#C37B3D] to-[#53385A]"),
-  thanksgiving: season("Thanksgiving", "Harvest scenes and vintage cards", "thanksgiving", "🦃", "from-[#AC7C2E] to-[#7A3F36]"),
-  christmas: season("Christmas", "Winter scenes and vintage cards", "christmas", "🎄", "from-[#A5524B] to-[#44624D]"),
+  winter: season("Winter", "Snow, frost and quiet light", "winter", Snowflake, "from-[#7592A8] to-[#3F586D]"),
+  valentine: season("Valentine’s Day", "Hearts, roses and vintage valentines", "valentine", Heart, "from-[#C0707F] to-[#78404F]"),
+  easter: season("Easter", "Spring, blossom and vintage cards", "easter", Egg, "from-[#8FA06D] to-[#51684A]"),
+  spring: season("Spring", "Blossom, orchards and new green", "spring", FlowerTulip, "from-[#7FA070] to-[#466A4C]"),
+  summer: season("Summer", "Beaches, meadows and long days", "summer", Sun, "from-[#C69A3E] to-[#8A5A26]"),
+  autumn: season("Autumn", "Harvest colours and falling leaves", "autumn", Leaf, "from-[#B96F3F] to-[#74402A]"),
+  halloween: season("Halloween", "Spooky art and vintage postcards", "halloween", Ghost, "from-[#C37B3D] to-[#53385A]"),
+  thanksgiving: season("Thanksgiving", "Harvest scenes and vintage cards", "thanksgiving", ForkKnife, "from-[#AC7C2E] to-[#7A3F36]"),
+  christmas: season("Christmas", "Winter scenes and vintage cards", "christmas", TreeEvergreen, "from-[#A5524B] to-[#44624D]"),
 };
 
-function season(label: string, blurb: string, query: string, emoji: string, gradient: string) {
-  return { label, blurb, query, emoji, gradient };
+function season(label: string, blurb: string, query: string, icon: Icon, gradient: string) {
+  return { label, blurb, query, icon, gradient };
 }
 
 /** Every tile to show, the seasonal one first. Tiles for a source that is not running are left out. */

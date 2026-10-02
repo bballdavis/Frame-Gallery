@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { TrashIcon, PlayIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { PlayIcon } from "@heroicons/react/24/solid";
 import { Skeleton } from "~/components/ui/skeleton"
 import ImageSource from "./ImageSource";
 import { type TVGalleryImage, type TVImageOrigin } from "../utils/tvApi";
@@ -106,8 +107,9 @@ export default function TVGalleryImageCard({ image, selectedTvIp, thumbnailsLoad
       <div className="flex gap-2 self-center ml-4">
         <button
           onClick={() => onPlay(image.content_id)}
-          className="inline-flex items-center justify-center p-2 bg-primary hover:bg-primary-hover text-primary-foreground rounded-lg transition-colors"
+          className="inline-flex items-center justify-center rounded-lg border border-primary bg-transparent p-2 text-primary transition-colors hover:bg-primary/10 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
           title="Play image"
+          aria-label="Play image"
         >
           <PlayIcon className="w-5 h-5" />
         </button>

@@ -488,7 +488,7 @@ export default function Discover() {
   const shownFilters: Filters = { ...filters, shape: source ? shapeFor(source.id) : filters.shape };
   const filtersNarrow = shownFilters.shape !== "any" || filters.sharp || Boolean(source?.has_type_filter && filters.paintings);
   // The segment on the left of the bar already says what is searched.
-  const searchPlaceholder = "An artist, a place, a mood";
+  const searchPlaceholder = "Artist, place, mood";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 pb-28 [overflow-anchor:none]">

@@ -106,13 +106,13 @@ export default function HomeHero({ slides }: HomeHeroProps) {
               className="absolute inset-0 size-full object-cover"
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-20 text-white sm:px-6 sm:pb-5">
-              <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0 max-w-xl">
                   <h2 className="line-clamp-2 text-xl font-semibold leading-tight text-balance sm:text-3xl">{slide.title}</h2>
                   {slide.subtitle && <p className="mt-0.5 line-clamp-1 text-sm text-white/85">{slide.subtitle}</p>}
                 </div>
                 <Tooltip label={slide.action}>
-                  <Button asChild size="icon" className="rounded-full bg-white text-neutral-950 hover:bg-white/90">
+                  <Button asChild size="icon" className="shrink-0 rounded-full bg-white text-neutral-950 hover:bg-white/90">
                     <Link to={slide.to} aria-label={slide.action}>
                       <ArrowUpRightIcon className="size-5" aria-hidden="true" />
                     </Link>

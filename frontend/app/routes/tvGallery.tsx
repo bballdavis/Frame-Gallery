@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { Popover } from "radix-ui";
-import { CheckCircleIcon, FunnelIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, FunnelIcon, SparklesIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/solid";
 import TVGalleryImageCard from "~/components/TVGalleryImageCard";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -381,21 +381,29 @@ export default function TVGallery() {
                   <span className="text-sm font-medium">
                     {selected.length} selected
                   </span>
-                  <button
-                    type="button"
-                    onClick={handleDeleteSelected}
-                    disabled={deleting}
-                    className="bg-destructive hover:bg-destructive/90 disabled:opacity-50 text-destructive-foreground text-sm font-medium py-2 px-4 rounded-lg"
-                  >
-                    {deleting ? "Deleting…" : "Delete from TV"}
-                  </button>
-                  <button
-                    type="button"
-                    className="text-sm text-muted-foreground hover:underline"
-                    onClick={() => { setSelected([]); lastClickedIndex.current = null; }}
-                  >
-                    Clear
-                  </button>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Tooltip label="Clear selection">
+                      <button
+                        type="button"
+                        className={iconButton}
+                        aria-label="Clear selection"
+                        onClick={() => { setSelected([]); lastClickedIndex.current = null; }}
+                      >
+                        <XMarkIcon className="size-5" aria-hidden="true" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip label={deleting ? "Deleting…" : `Delete ${selected.length} from the TV`}>
+                      <button
+                        type="button"
+                        onClick={handleDeleteSelected}
+                        disabled={deleting}
+                        aria-label={`Delete ${selected.length} selected from the TV`}
+                        className="inline-flex size-9 items-center justify-center rounded-lg bg-destructive text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                      >
+                        <TrashIcon className="size-5" aria-hidden="true" />
+                      </button>
+                    </Tooltip>
+                  </div>
                 </div>
               )}
             </div>

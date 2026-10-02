@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Popover } from "radix-ui";
-import { CheckIcon, ChevronUpDownIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
+import { CheckIcon, ChevronDownIcon, ChevronUpDownIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
 import SourceLogo from "./SourceLogo";
 import type { DiscoverSource } from "~/utils/discoverApi";
 
@@ -56,25 +56,31 @@ export default function SourcePicker({ sources, scope, onSelect, onOpen, onOpenC
         aria-label={`Searching ${current ? current.name : "all sources"}. Change source`}
         // The left segment of the search bar: it shares the bar's border and height, and is
         // divided from the text field by a rule of its own.
-        className="inline-flex h-full shrink-0 items-center gap-2 rounded-l-md border-r border-border bg-muted/50 pl-3 pr-2.5 text-sm transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/50 focus-visible:outline-none"
+        title={current ? current.name : "All sources"}
+        className="inline-flex h-full shrink-0 items-center gap-1 rounded-l-md border-r border-border bg-muted/50 pl-3 pr-2 text-sm sm:gap-2 sm:pr-2.5 transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-inset focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         <span className="hidden text-muted-foreground sm:inline">Searching</span>
+        {/* On a phone just an icon (the source's logo, or a grid for all of them), so the text field has room. */}
         {current ? (
           <span className="flex items-center gap-1.5 font-medium">
-            <SourceLogo source={current} className="size-5" />
-            <span className="max-w-28 truncate sm:max-w-40">{current.name}</span>
+            <SourceLogo source={current} className="size-6 sm:size-5" />
+            <span className="hidden max-w-40 truncate sm:inline">{current.name}</span>
           </span>
         ) : (
-          <span className="flex items-center gap-2 font-medium">
-            <span className="flex -space-x-1.5" aria-hidden="true">
-              {sources.slice(0, 4).map((s) => (
-                <SourceLogo key={s.id} source={s} className="size-5 ring-2 ring-card" />
-              ))}
+          <>
+            <Squares2X2Icon className="size-5 text-muted-foreground sm:hidden" aria-hidden="true" />
+            <span className="hidden items-center gap-2 font-medium sm:flex">
+              <span className="flex -space-x-1.5" aria-hidden="true">
+                {sources.slice(0, 4).map((s) => (
+                  <SourceLogo key={s.id} source={s} className="size-5 ring-2 ring-card" />
+                ))}
+              </span>
+              All sources
             </span>
-            All sources
-          </span>
+          </>
         )}
-        <ChevronUpDownIcon className="size-4 text-muted-foreground" aria-hidden="true" />
+        <ChevronUpDownIcon className="hidden size-4 text-muted-foreground sm:block" aria-hidden="true" />
+        <ChevronDownIcon className="size-3.5 text-muted-foreground sm:hidden" aria-hidden="true" />
       </Popover.Trigger>
 
       <Popover.Portal>
