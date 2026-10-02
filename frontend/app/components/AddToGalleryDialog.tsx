@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, Progress } from "radix-ui";
 import { Link } from "react-router";
-import {
-  ArrowTopRightOnSquareIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  HeartIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowSquareOut as ArrowTopRightOnSquareIcon, CheckCircle as CheckCircleIcon, Heart as HeartIcon, Warning as ExclamationTriangleIcon, X as XMarkIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import ArtworkImage from "./ArtworkImage";

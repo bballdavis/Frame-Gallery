@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { MagnifyingGlassIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlass as MagnifyingGlassIcon, XCircle as XCircleIcon } from "@phosphor-icons/react";
 import AddToGalleryDialog, { NEW_ALBUM, type AddChoice } from "~/components/AddToGalleryDialog";
 import AllResults, { type Group } from "~/components/AllResults";
 import ArtworkCard from "~/components/ArtworkCard";

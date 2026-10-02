@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
-import { ArrowLeftIcon, MagnifyingGlassIcon, PlusIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowLeft as ArrowLeftIcon, MagnifyingGlass as MagnifyingGlassIcon, Plus as PlusIcon, XCircle as XCircleIcon } from "@phosphor-icons/react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { AlbumNameDialog, AlbumTile, type Album } from "~/components/AlbumStrip";

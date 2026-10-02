@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowUpTrayIcon, ExclamationCircleIcon, TrashIcon, XMarkIcon, SparklesIcon, TvIcon } from "@heroicons/react/24/outline";
+import { Sparkle as SparklesIcon, Television as TvIcon, Trash as TrashIcon, UploadSimple as ArrowUpTrayIcon, WarningCircle as ExclamationCircleIcon, X as XMarkIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import { MATTE_STYLES, MATTE_COLORS } from "../utils/matte";
 import ImageSource from "./ImageSource";
@@ -244,7 +244,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
                   onClick={() => handleSendToTV()}
                   disabled={tvLoading || !selectedTvIp}
                 >
-                  <ArrowUpTrayIcon className="h-4 w-4" strokeWidth={2.5} />
+                  <ArrowUpTrayIcon className="h-4 w-4" weight="bold" />
                   {tvLoading ? 'Processing…' : 'Upload and Play on TV'}
                 </button>
 
@@ -263,7 +263,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
                   onClick={() => handleSendToTV()}
                   disabled={tvLoading || !selectedTvIp}
                 >
-                  <ArrowUpTrayIcon className="h-4 w-4" strokeWidth={2.5} />
+                  <ArrowUpTrayIcon className="h-4 w-4" weight="bold" />
                   {tvLoading ? 'Uploading…' : 'Upload to TV'}
                 </button>
 
@@ -292,7 +292,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
         {/* No TVs Warning */}
         {tvs.length === 0 && (
           <div className="text-xs text-muted-foreground bg-muted p-3 rounded-lg flex items-center gap-2 border border-border">
-            <ExclamationCircleIcon className="h-5 w-5 flex-shrink-0 text-warning" strokeWidth={1.8} />
+            <ExclamationCircleIcon className="h-5 w-5 flex-shrink-0 text-warning" />
             <span>No TVs configured. Go to Settings to add one.</span>
           </div>
         )}

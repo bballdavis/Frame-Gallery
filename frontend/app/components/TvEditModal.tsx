@@ -1,5 +1,5 @@
 import { Dialog } from 'radix-ui'
-import { XIcon } from 'lucide-react'
+import { X as XIcon } from "@phosphor-icons/react";
 
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'

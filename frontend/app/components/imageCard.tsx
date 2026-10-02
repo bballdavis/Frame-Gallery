@@ -4,7 +4,7 @@ import { addImageToAlbum } from "../utils/galleryApi";
 import CropImageModal from "./CropImageModal";
 import ImageModal, { type TV, type AlbumOption } from "./imageModal";
 import { MATTE_COLORS, splitMatte, combineMatte } from "../utils/matte";
-import { CheckIcon } from "@heroicons/react/24/outline";
+import { Check as CheckIcon } from "@phosphor-icons/react";
 
 export interface ImageCardProps {
   /** what the grid tile shows — may be a downscaled copy */
@@ -292,7 +292,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
               aria-label={`Select ${title}`}
               onChange={(event) => onToggleSelect((event.nativeEvent as MouseEvent).shiftKey)}
             />
-            <CheckIcon className="size-4" strokeWidth={3} aria-hidden="true" />
+            <CheckIcon className="size-4" weight="bold" aria-hidden="true" />
           </label>
         )}
       </div>

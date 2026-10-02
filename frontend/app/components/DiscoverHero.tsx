@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRightIcon, ChevronLeftIcon, ChevronRightIcon, PauseIcon, PlayIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ArrowUpRight as ArrowUpRightIcon, CaretLeft as ChevronLeftIcon, CaretRight as ChevronRightIcon, Pause as PauseIcon, Play as PlayIcon, Plus as PlusIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip } from "./ui/tooltip";

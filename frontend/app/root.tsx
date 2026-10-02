@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import { ThemeProvider } from "next-themes";
+import { IconContext } from "@phosphor-icons/react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -44,10 +45,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <ScrollRestoration />
-          <Scripts />
-          <Toaster />
+          {/* One icon set across the app, in duotone: a line plus a soft fill of the same colour. */}
+          <IconContext.Provider value={{ weight: "duotone" }}>
+            {children}
+            <ScrollRestoration />
+            <Scripts />
+            <Toaster />
+          </IconContext.Provider>
         </ThemeProvider>
       </body>
     </html>

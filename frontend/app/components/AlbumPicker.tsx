@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Popover } from "radix-ui";
-import { CheckIcon, ChevronDownIcon, InboxIcon, MagnifyingGlassIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
+import { CaretDown as ChevronDownIcon, Check as CheckIcon, MagnifyingGlass as MagnifyingGlassIcon, SquaresFour as Squares2X2Icon, Tray as InboxIcon } from "@phosphor-icons/react";
 import { AlbumCover, type Album } from "./AlbumStrip";
 
 export const ALL_ALBUMS = "all";

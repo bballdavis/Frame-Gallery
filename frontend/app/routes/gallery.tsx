@@ -16,8 +16,7 @@ import { toast } from "sonner";
 import ImageUploadModal from "~/components/imageUploadModal";
 import { Popover } from "radix-ui";
 import { Tooltip } from "~/components/ui/tooltip";
-import { ArrowRightIcon, ArrowUpTrayIcon, ArrowsUpDownIcon, CheckCircleIcon, CheckIcon, MagnifyingGlassIcon, XCircleIcon } from "@heroicons/react/24/outline";
-import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/solid";
+import { ArrowRight as ArrowRightIcon, ArrowsDownUp as ArrowsUpDownIcon, Check as CheckIcon, CheckCircle as CheckCircleIcon, CheckCircle as CheckCircleSolidIcon, MagnifyingGlass as MagnifyingGlassIcon, UploadSimple as ArrowUpTrayIcon, XCircle as XCircleIcon } from "@phosphor-icons/react";
 type ProviderAlbum = { id: string; name: string; asset_count: number };
 type ProviderImage = { id: string; filename: string; thumb_url: string; metadata: any };
 
@@ -512,7 +511,7 @@ export default function Gallery() {
               }}
             >
               {allSelected ? (
-                <CheckCircleSolidIcon className="size-5 text-primary" aria-hidden="true" />
+                <CheckCircleSolidIcon weight="fill" className="size-5 text-primary" aria-hidden="true" />
               ) : (
                 <CheckCircleIcon className="size-5" aria-hidden="true" />
               )}
@@ -696,7 +695,7 @@ export default function Gallery() {
           title="Upload Image"
           className=" flex items-center justify-center w-16 h-16 bg-primary hover:bg-primary-hover active:scale-95 text-primary-foreground rounded-full shadow-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300"
         >
-          <ArrowUpTrayIcon className="w-7 h-7" strokeWidth={2} />
+          <ArrowUpTrayIcon className="w-7 h-7" weight="bold" />
         </button>
       </div>
 

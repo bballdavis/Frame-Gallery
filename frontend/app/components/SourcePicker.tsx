@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Popover } from "radix-ui";
-import { CheckIcon, ChevronDownIcon, ChevronUpDownIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
+import { CaretDown as ChevronDownIcon, CaretUpDown as ChevronUpDownIcon, Check as CheckIcon, SquaresFour as Squares2X2Icon } from "@phosphor-icons/react";
 import SourceLogo from "./SourceLogo";
 import type { DiscoverSource } from "~/utils/discoverApi";
 

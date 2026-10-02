@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Dialog, Popover } from "radix-ui";
-import {
-  FunnelIcon,
-  PencilSquareIcon,
-  PhotoIcon,
-  PlusIcon,
-  Squares2X2Icon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+import { Funnel as FunnelIcon, Image as PhotoIcon, PencilSimple as PencilSquareIcon, Plus as PlusIcon, SquaresFour as Squares2X2Icon, Trash as TrashIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Tooltip } from "./ui/tooltip";

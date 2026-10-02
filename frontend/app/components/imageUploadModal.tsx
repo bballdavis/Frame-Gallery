@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { XMarkIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { UploadSimple as ArrowUpTrayIcon, X as XMarkIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import { uploadImage, createAlbum } from "../utils/galleryApi";
 import { toast } from "sonner";

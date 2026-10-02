@@ -1,5 +1,5 @@
 import { Popover } from "radix-ui";
-import { AdjustmentsHorizontalIcon } from "@heroicons/react/24/outline";
+import { SlidersHorizontal as AdjustmentsHorizontalIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import type { DiscoverSource, Shape } from "~/utils/discoverApi";
 

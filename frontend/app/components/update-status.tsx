@@ -1,4 +1,4 @@
-import { BellAlertIcon, SparklesIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { BellRinging as BellAlertIcon, Sparkle as SparklesIcon, X as XMarkIcon } from "@phosphor-icons/react";
 import React, { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { fetchAppStatus, type AppStatusResponse } from "~/utils/appApi";

@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { NavLink } from "react-router"; // Achtung: react-router-dom
-import { HomeIcon, UserIcon, PlusIcon, Cog6ToothIcon, PhotoIcon, SparklesIcon, TvIcon } from "@heroicons/react/24/outline";
+import { Gear as Cog6ToothIcon, House as HomeIcon, Image as PhotoIcon, Plus as PlusIcon, Sparkle as SparklesIcon, Television as TvIcon, User as UserIcon } from "@phosphor-icons/react";
 
 const items = [
   { id: "home", label: "Home", icon: <HomeIcon className="w-6 h-6" />, href: "/" },

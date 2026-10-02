@@ -1,4 +1,4 @@
-import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { UploadSimple as ArrowUpTrayIcon } from "@phosphor-icons/react";
 import React, { useState } from "react";
 
 type ImageDropZoneProps = {

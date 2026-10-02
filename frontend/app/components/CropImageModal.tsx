@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import Cropper from "react-cropper";
 import 'cropperjs';
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { X as XMarkIcon } from "@phosphor-icons/react";
 import { cropImage } from "../utils/galleryApi";
 
 interface CropImageModalProps {

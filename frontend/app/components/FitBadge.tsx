@@ -1,11 +1,6 @@
 import { useRef, useState } from "react";
 import { Popover } from "radix-ui";
-import {
-  CheckIcon,
-  ExclamationTriangleIcon,
-  QuestionMarkCircleIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { Check as CheckIcon, Question as QuestionMarkCircleIcon, Warning as ExclamationTriangleIcon, X as XMarkIcon } from "@phosphor-icons/react";
 import { assessFit, type Criterion, type FitStatus } from "~/lib/fit";
 import type { Artwork } from "~/utils/discoverApi";
 
@@ -46,7 +41,7 @@ export function FitCriteriaList({ artwork, className = "" }: { artwork: Artwork;
         const Icon = ICONS[criterion.status];
         return (
           <li key={criterion.id} className="flex items-start gap-2 text-sm">
-            <Icon className={`mt-0.5 size-4 shrink-0 ${GLYPH[criterion.status]}`} strokeWidth={2.5} aria-hidden="true" />
+            <Icon className={`mt-0.5 size-4 shrink-0 ${GLYPH[criterion.status]}`} weight="bold" aria-hidden="true" />
             <span>
               <span className="font-medium">{criterion.label}</span>
               <span className="sr-only"> ({STATUS_WORD[criterion.status]})</span>
@@ -90,7 +85,7 @@ export default function FitBadge({ artwork }: { artwork: Artwork }) {
           aria-label={`${fit.headline}. Show details`}
           className={`absolute bottom-2 left-2 inline-flex size-7 items-center justify-center rounded-full shadow-md ring-2 ring-black/30 transition-transform hover:scale-110 focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none ${DISC[fit.status]}`}
         >
-          <Icon className="size-4" strokeWidth={3} aria-hidden="true" />
+          <Icon className="size-4" weight="bold" aria-hidden="true" />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
@@ -106,7 +101,7 @@ export default function FitBadge({ artwork }: { artwork: Artwork }) {
         >
           <p className="mb-3 flex items-start gap-2 text-sm font-semibold">
             <span className={`mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full ${DISC[fit.status]}`}>
-              <Icon className="size-3.5" strokeWidth={3} aria-hidden="true" />
+              <Icon className="size-3.5" weight="bold" aria-hidden="true" />
             </span>
             {fit.headline}
           </p>

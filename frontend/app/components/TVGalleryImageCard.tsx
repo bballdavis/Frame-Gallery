@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { TrashIcon, PhotoIcon } from "@heroicons/react/24/outline";
-import { PlayIcon } from "@heroicons/react/24/solid";
+import { Image as PhotoIcon, Play as PlayIcon, Trash as TrashIcon } from "@phosphor-icons/react";
 import { Skeleton } from "~/components/ui/skeleton"
 import ImageSource from "./ImageSource";
 import { type TVGalleryImage, type TVImageOrigin } from "../utils/tvApi";
@@ -111,7 +110,7 @@ export default function TVGalleryImageCard({ image, selectedTvIp, thumbnailsLoad
           title="Play image"
           aria-label="Play image"
         >
-          <PlayIcon className="w-5 h-5" />
+          <PlayIcon weight="fill" className="w-5 h-5" />
         </button>
         <button
           onClick={() => onDelete(image.content_id)}

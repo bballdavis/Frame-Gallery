@@ -1,4 +1,4 @@
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { Warning as ExclamationTriangleIcon } from "@phosphor-icons/react";
 import ArtworkCard from "./ArtworkCard";
 import SourceLogo from "./SourceLogo";
 import { Button } from "./ui/button";

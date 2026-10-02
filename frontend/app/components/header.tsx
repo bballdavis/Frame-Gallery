@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 
 import { useLocation } from "react-router";
 import { useTheme } from "next-themes";
-import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
+import { Moon as MoonIcon, Sun as SunIcon } from "@phosphor-icons/react";
 
 import lockupForLight from "~/assets/brand/frame-gallery-logo-wordmark-for-light.svg";
 import lockupForDark from "~/assets/brand/frame-gallery-logo-wordmark-for-dark.svg";

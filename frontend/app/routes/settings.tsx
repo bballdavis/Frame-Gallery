@@ -9,7 +9,7 @@ import { getBackupUrl, reconcileImages } from '~/utils/galleryApi';
 import { toast } from 'sonner';
 
 import type { ProviderConfig } from '~/utils/providerApi';
-import { SparklesIcon, PencilIcon, ImagesIcon, PlusIcon } from 'lucide-react';
+import { Images as ImagesIcon, Pencil as PencilIcon, Plus as PlusIcon, Sparkle as SparklesIcon } from "@phosphor-icons/react";
 import { splitMatte } from '~/utils/matte';
 import { Switch } from '~/components/ui/switch';
 import { TvEditModal, type TV } from '~/components/TvEditModal';

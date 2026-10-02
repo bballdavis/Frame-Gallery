@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router";
 import { Popover } from "radix-ui";
-import { CheckCircleIcon, FunnelIcon, SparklesIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/solid";
+import { CheckCircle as CheckCircleIcon, CheckCircle as CheckCircleSolidIcon, Funnel as FunnelIcon, Sparkle as SparklesIcon, Trash as TrashIcon, X as XMarkIcon } from "@phosphor-icons/react";
 import TVGalleryImageCard from "~/components/TVGalleryImageCard";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Tooltip } from "~/components/ui/tooltip";
@@ -340,7 +339,7 @@ export default function TVGallery() {
                       }}
                     >
                       {allSelected ? (
-                        <CheckCircleSolidIcon className="size-5 text-primary" aria-hidden="true" />
+                        <CheckCircleSolidIcon weight="fill" className="size-5 text-primary" aria-hidden="true" />
                       ) : (
                         <CheckCircleIcon className="size-5" aria-hidden="true" />
                       )}

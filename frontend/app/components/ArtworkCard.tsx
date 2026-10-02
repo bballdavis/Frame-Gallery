@@ -1,4 +1,4 @@
-import { ArrowDownTrayIcon, ArrowTopRightOnSquareIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { ArrowSquareOut as ArrowTopRightOnSquareIcon, Check as CheckIcon, DownloadSimple as ArrowDownTrayIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import ArtworkImage from "./ArtworkImage";
 import FitBadge from "./FitBadge";
