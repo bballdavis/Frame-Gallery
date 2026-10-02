@@ -16,6 +16,7 @@ from .common import (
     apply_shape,
     matches_sharp,
     matches_shape,
+    TARGET_WIDTH,
 )
 
 SEARCH_TTL_SECONDS = 24 * 3600
@@ -28,7 +29,7 @@ MOODS = [
 ]
 # The Met is left out: it does not list image sizes, and it is the costly source to ask.
 # Only sources with a clear license go in the hero: never the flagged personal-use ones.
-HERO_SOURCES = ("reframed", "artic", "cleveland", "smk", "louvre", "worldmuseums", "saam", "modernart")
+HERO_SOURCES = ("reframed", "artic", "cleveland", "smk", "louvre", "worldmuseums", "saam", "modernart", "getty", "nga", "yale")
 PER_SOURCE = 2
 MAX_SLIDES = 12
 
@@ -69,6 +70,10 @@ def hero_url(art):
         return url.replace("!480,", "!1400,")
     if source in ("louvre", "worldmuseums", "modernart", "popart", "illustrations", "ukiyoe"):
         return re.sub(r"/\d+px-", "/1280px-", url)
+    if source == "getty":
+        return url.replace("/full/480,/", "/full/1600,/")
+    if source in ("nga", "yale"):
+        return re.sub(r"/\d+px-", "/1280px-", url)
     if source in ("saam", "cooperhewitt"):
         return url.replace("&max=480", "&max=1600")
     return url
@@ -101,7 +106,7 @@ def highlights(sources, today=None):
         for art in raw["results"]:
             title = art["title"].strip().lower()
             # Pairs and series share a title; one of each is plenty for a hero.
-            if title in seen or not (matches_shape(art, "wide") and matches_sharp(art)):
+            if title in seen or not (matches_shape(art, "wide") and matches_sharp(art, TARGET_WIDTH)):
                 continue
             seen.add(title)
             picks.append({**art, "hero_url": hero_url(art)})

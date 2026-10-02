@@ -413,12 +413,14 @@ def sized(item_id, width, height, tv_ready=False):
     return {"source": "fake", "id": item_id, "width": width, "height": height, "tv_ready": tv_ready}
 
 
-def test_the_sharp_filter_keeps_only_works_that_will_be_crisp_on_4k(client, fake):
+def test_the_sharp_filter_keeps_works_with_enough_pixels_for_a_smooth_upscale_to_4k(client, fake):
     fake.results = [
         sized("big", 8000, 4500),                 # plenty of pixels
         sized("tall", 5000, 7000),                # portrait: the crop is only 5000 wide, still enough
-        sized("small", 3000, 2000),               # a crop would be 3000 wide: soft
-        sized("wide", 6000, 2000),                # wide: the crop is 3555 wide, just short
+        sized("small", 3000, 2000),               # a crop would be 3000 wide: fine, it is scaled up smoothly
+        sized("wide", 6000, 2000),                # wide: the crop is 3555 wide
+        sized("edge", 2560, 1600),                # exactly the line: a 2560 wide crop
+        sized("tiny", 2000, 1500),                # a 2000 wide crop: too soft
         sized("unknown", None, None),             # no size listed (the Met): cannot promise
         sized("ready", None, None, tv_ready=True),  # made for the panel
     ]
@@ -426,9 +428,9 @@ def test_the_sharp_filter_keeps_only_works_that_will_be_crisp_on_4k(client, fake
     everything = client.get("/api/discover/search?source=fake").get_json()
     sharp = client.get("/api/discover/search?source=fake&sharp=1").get_json()
 
-    assert len(everything["results"]) == 6
-    assert [r["id"] for r in sharp["results"]] == ["big", "tall", "ready"]
-    assert sharp["hidden"] == 3
+    assert len(everything["results"]) == 8
+    assert [r["id"] for r in sharp["results"]] == ["big", "tall", "small", "wide", "edge", "ready"]
+    assert sharp["hidden"] == 2
 
 
 # --- Cached searches, per-source flags and highlights -------------------------------

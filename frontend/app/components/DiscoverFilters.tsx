@@ -110,9 +110,9 @@ export default function DiscoverFilters({ filters, onChange, onReset, source, on
                 className="mt-0.5 size-4 accent-[var(--primary)]"
               />
               <span>
-                <span className="block font-medium">Sharp on a 4K TV only</span>
+                <span className="block font-medium">Big enough for a 4K TV</span>
                 <span className="block text-xs text-muted-foreground">
-                  Enough pixels to fill the screen without scaling up. Hides works whose size the source does not list,
+                  At least 2560 px wide once cropped to 16:9, which scales up smoothly to the 4K panel. Hides works whose size the source does not list,
                   which includes The Met.
                 </span>
               </span>

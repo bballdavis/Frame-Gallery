@@ -26,6 +26,11 @@ DEFAULT_SHAPE = "wide"
 LANDSCAPE_MIN_ASPECT = 1.2   # clearly wider than tall
 WIDE_MIN_ASPECT = 1.6        # a 16:9 crop loses roughly a tenth or less
 FITS_MAX_CROP_LOSS = 0.03    # 16:9 within a hair: no matte, nothing cropped
+# "Sharp" means enough pixels once cropped to 16:9 for a smooth Lanczos upscale to the panel
+# (the same line crop.py upscales from). Art is soft-edged and viewed from a distance, so a
+# 2560 px crop looks right at 3840; the strict panel width is kept for the daily highlights.
+SHARP_MIN_WIDTH = 2560
+FLAGGED_MIN_WIDTH = 1920     # least a source with no clear license may offer
 
 CONNECT_TIMEOUT = 10
 READ_TIMEOUT = 30
@@ -161,8 +166,8 @@ def matches_shape(item, shape):
     return aspect >= (LANDSCAPE_MIN_ASPECT if shape == "landscape" else WIDE_MIN_ASPECT)
 
 
-def matches_sharp(item):
-    """Whether the picture will be sharp on a 4K panel after being cropped to fill it.
+def matches_sharp(item, min_width=SHARP_MIN_WIDTH):
+    """Whether the picture has enough pixels for a 4K panel after being cropped to fill it.
 
     Needs a known size, so works the source does not measure (the Met's) never pass.
     """
@@ -172,7 +177,7 @@ def matches_sharp(item):
     if not width or not height:
         return False
     crop_width = height * TARGET_RATIO if width / height >= TARGET_RATIO else width
-    return crop_width >= TARGET_WIDTH
+    return crop_width >= min_width
 
 
 def apply_shape(items, shape):

@@ -64,18 +64,19 @@ export function assessFit(art: Artwork): Fit {
     if (usable >= PANEL_WIDTH) {
       criteria.push({ id: "resolution", label: "Resolution", status: "ok", detail: `${size}, sharp on a 4K TV` });
     } else if (usable >= 2560) {
+      // Art is soft-edged and seen from a distance, so a smooth upscale from here looks right.
       criteria.push({
         id: "resolution",
         label: "Resolution",
-        status: "warn",
-        detail: `${size}, so it is scaled up and may look slightly soft`,
+        status: "ok",
+        detail: `${size}, scaled up smoothly to fill a 4K TV`,
       });
     } else {
       criteria.push({
         id: "resolution",
         label: "Resolution",
         status: "bad",
-        detail: `${size}, too small: it will look soft on the TV`,
+        detail: `${size}, on the small side: it will look soft on the TV`,
       });
     }
   } else {

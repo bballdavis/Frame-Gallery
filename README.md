@@ -75,8 +75,12 @@ The **Discover** tab searches free, high-resolution art and imports it straight 
 | Digital art, Pop art, Illustration (Wikimedia Commons) | CC0, CC BY, CC BY-SA or public domain | Modern work shared by the artists themselves. The artist and license are recorded with each import. Never the non-commercial or no-derivatives licenses. |
 | [Japanese woodblock prints](https://commons.wikimedia.org/) (Wikimedia Commons) | Public domain / CC0 only | Ukiyo-e: waves, mountains, cats and kabuki. |
 | [Modern American art and Design & posters](https://www.si.edu/openaccess) (Smithsonian) | Public domain (CC0) | American Art Museum and Cooper Hewitt, at full resolution. Needs a free key. |
+| [The Getty](https://www.getty.edu/art/collection/) | Public domain (CC0) | Paintings, drawings and photographs. Found with the museum's open SPARQL endpoint, and downloaded through its image server, scaled to the TV. |
+| [National Gallery of Art](https://www.nga.gov/open-access-images.html) and [Yale Center for British Art](https://britishart.yale.edu/) (Wikimedia Commons) | Public domain / CC0 only | Both donated their open-access paintings to Commons, which is the way in because neither has a search API. |
 | [Flickr](https://www.flickr.com/creativecommons/) | CC0, CC BY, CC BY-SA, public domain | Search by tag or title across freely licensed photography and street art. Needs a free key. |
 | [Pixabay illustrations](https://pixabay.com/illustrations/) | Pixabay Content License | Cute, colorful illustration. A free key returns files up to 1280 px; Pixabay can approve a key for full-size files. |
+| [Danbooru](https://danbooru.donmai.us/), [Konachan](https://konachan.net/) and [Bing daily wallpapers](https://www.bing.com/) | **License not verified (personal use)** | Danbooru and Konachan: anime and illustration art searched by tag, general/safe ratings only. Bing: each day's world photograph in 4K. All need no key, are flagged and off by default, and offer only pictures at least 1920 px wide. |
+| [Mastodon art tags](https://mastodon.social/tags/mastoart) | **License not verified (personal use)** | What artists are posting right now, by hashtag (`mastoart`, `pixelart`, `digitalart`). Reads one server's public tag pages with no key; sensitive posts are skipped. Flagged and off by default. |
 | [Wallhaven](https://wallhaven.cc/) and [DeviantArt](https://www.deviantart.com/) | **License not verified (personal use)** | Huge, well-tagged libraries of independent art, but neither records a reusable license. They are flagged, **off by default** (turn them on under Settings, Discover, More sources), and never in the daily highlights. Wallhaven needs no key; DeviantArt needs a free app (client ID and secret) and offers only art the artist made downloadable. |
 
 - **Framing**: *Fill the screen* crops to 16:9 (tiles preview exactly what you will get, with the share lost shown on each); *Whole artwork* keeps every edge and lets the TV add a matte. The **Shape** filter narrows results to *Landscape* (wider than tall), *Wide* (close to 16:9, the default) or *No matte needed* (already 16:9 within 3%, so nothing is cropped or padded).
@@ -116,6 +120,7 @@ All optional, with sensible defaults. Set them as environment variables on the c
 | Variable | Default | What it does |
 | --- | --- | --- |
 | `GUNICORN_WORKERS` | `4` | Worker processes. More than one keeps a slow TV from blocking the whole app. |
+| `GUNICORN_THREADS` | `16` | Threads per worker. Requests mostly wait on museum APIs and TVs, so threads let many run at once. |
 | `GUNICORN_TIMEOUT` | `180` | Seconds before gunicorn kills a worker. Keep it above `FRAME_TV_UPLOAD_DEADLINE`. |
 | `FRAME_TV_SOCKET_TIMEOUT` | `8` | Socket timeout for a single read from the TV. |
 | `FRAME_TV_CALL_DEADLINE` | `20` | Seconds a normal TV request may take before it is given up on. |
