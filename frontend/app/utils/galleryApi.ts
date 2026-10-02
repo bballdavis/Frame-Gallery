@@ -89,6 +89,23 @@ export async function cropImage(
   return (await res.json());
 }
 
+/** Where an image came from: a manual upload, or the source it was added from. */
+export type ImageProvenance = {
+  source: string | null;
+  source_label: string;
+  source_id: string | null;
+  source_url: string | null;
+  title: string | null;
+  artist: string | null;
+  license: string | null;
+};
+
+export async function fetchImageDetails(): Promise<Record<string, ImageProvenance>> {
+  const res = await fetch(`${API_BASE}/api/images/details`);
+  if (!res.ok) throw new Error('Failed to fetch image details');
+  return (await res.json()).details;
+}
+
 export async function fetchAlbums() {
   const res = await fetch(`${API_BASE}/api/albums`);
   if (!res.ok) throw new Error('Failed to fetch albums');
@@ -108,16 +125,6 @@ export async function uploadImage(file: File, albumId?: string | number) {
   });
   if (!res.ok) throw new Error((await res.json()).error || 'Failed to upload image');
 
-  return await res.json();
-}
-
-export async function importReframedGallery(url: string, albumId?: string | number) {
-  const res = await fetch(`${API_BASE}/api/import/reframed`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url, album_id: albumId || undefined }),
-  });
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to import artwork');
   return await res.json();
 }
 
