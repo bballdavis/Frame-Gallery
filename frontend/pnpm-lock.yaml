@@ -31,9 +31,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      cropperjs:
-        specifier: ^2.1.1
-        version: 2.2.0
       isbot:
         specifier: ^5.2.2
         version: 5.2.2
@@ -46,9 +43,6 @@ importers:
       react:
         specifier: ^19.3.0
         version: 19.3.0
-      react-cropper:
-        specifier: ^2.3.3
-        version: 2.3.3(react@19.3.0)
       react-dom:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
@@ -232,39 +226,6 @@ packages:
   '@babel/types@7.29.8':
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
-
-  '@cropper/element-canvas@2.2.0':
-    resolution: {integrity: sha512-H0Ay2ZSZrxWLP/8fSudH9hghsgIJh9fCgEmpfzD7MnQbE8HdQKljnoRxbrjuFT7Y0rmf405Sp9PmNA6T4twegw==}
-
-  '@cropper/element-crosshair@2.2.0':
-    resolution: {integrity: sha512-RXNhlsCd7lPTTjR2rfUEYghaL5bkqiU70qojJCUz1EIKfLriToDztjlsw3TZKJUBHYA+JOnmTBDFTnizoMUN1w==}
-
-  '@cropper/element-grid@2.2.0':
-    resolution: {integrity: sha512-1hxHLi7Jrek/xxeG12a9+TO18Ot4pCG4V9Zh+A0GMLsfFjrd2k/kl0wOq0x1isNNrP3kkIw47FdID2iWR8A48A==}
-
-  '@cropper/element-handle@2.2.0':
-    resolution: {integrity: sha512-+WPzHWF96RtLTAtotIcQQ6Sx3zVLQdK+qbaM2yKa841Iz60gQ3qKk7Jl5ndy2OgkEfxZaJI/3lWyf1RMGs/TEw==}
-
-  '@cropper/element-image@2.2.0':
-    resolution: {integrity: sha512-J0zBFMEfW6yuAmXoP6S+ZdNJy5J2duVsUS0N2o3D/HxHiVo4Vm3jrSexasu/Vfvwe4Lv0nmZ/10KW3RxhrvDCQ==}
-
-  '@cropper/element-selection@2.2.0':
-    resolution: {integrity: sha512-ATtWeEb1J/scQ98ins2jy4YbVOqz13F54jDk4Mm7OCpG0fzDseOujSLoIP8y26gtY7XGQXvn8WiFBbIZbeSgxQ==}
-
-  '@cropper/element-shade@2.2.0':
-    resolution: {integrity: sha512-fiurnjecablA8+17GoOjiNrzKWe85Q6h9JLbPJkxKCQxcxqpjEsOdGu3YlRxaBYcYvr6wH9tghufOlUfYJS9nw==}
-
-  '@cropper/element-viewer@2.2.0':
-    resolution: {integrity: sha512-w6uO7m7PwBWKynMwj8DYkJHFXrHC6Xxvcp5Y+tSxhfcNtOvw92FDncqRLYv+xHQoCDXEvfCqJyrTx9nIiZgiLQ==}
-
-  '@cropper/element@2.2.0':
-    resolution: {integrity: sha512-Kckk7TiWt3Cf9MvSfmMx7ZOIuN1rzIUIwIPQSqSj0Sl6gj6opo+CPax+fREvyvVKEzAug7L0sQFZ0TL4H5LsNw==}
-
-  '@cropper/elements@2.2.0':
-    resolution: {integrity: sha512-OQiVvEjIQUbMAUGpFrI/L95elHNIXjdlSxxzeywbU6C93PdPypXeGQfOSLQ43zUYmFutWNb7jTrHvgb3JaE+VQ==}
-
-  '@cropper/utils@2.2.0':
-    resolution: {integrity: sha512-wTrpZl+F4Kr2hzovqjztSexWUU+EVK1CxPymbYgFYoAS/NZXwCDsrvikJQn+HYZVxjqyo/ClnFxA0fG+tFy6Hw==}
 
   '@dotenvx/dotenvx@1.75.1':
     resolution: {integrity: sha512-/BITOC9dmS/edY2zQwZNicQ059O6RKabtQfyEafV0nGtfYRNHYy1DIPiYVcov40+tob9hfmBnbR963dS+EQ1DQ==}
@@ -1762,12 +1723,6 @@ packages:
       typescript:
         optional: true
 
-  cropperjs@1.6.3:
-    resolution: {integrity: sha512-BRb0PRIzjbfM5n+i6L2D85pSbXI/w6cnnwb9W9cRKgAmbiP+OjDeq+Irhd86IujZDXm/7JWECfscllFIdrlmfw==}
-
-  cropperjs@2.2.0:
-    resolution: {integrity: sha512-7egO+tXxt3jGHQcO6x4k1CVoMIlEu+4Klixc6ejspKOAns7onlC/lEi5tRi3qbuHVcATK7rqaZyp8LzynPz6Cg==}
-
   cross-dirname@0.1.0:
     resolution: {integrity: sha512-+R08/oI0nl3vfPcqftZRpytksBXDzOUveBq/NBVx0sUp1axwzPQrKinNx5yd5sxPu8j1wIy8AfnVQ+5eFdha6Q==}
 
@@ -3041,11 +2996,6 @@ packages:
     resolution: {integrity: sha512-K5zQjDllxWkf7Z5xJdV0/B0WTNqx6vxG70zJE4N0kBs4LovmEYWJzQGxC9bS9RAKu3bgM40lrd5zoLJ12MQ5BA==}
     engines: {node: '>= 0.10'}
 
-  react-cropper@2.3.3:
-    resolution: {integrity: sha512-zghiEYkUb41kqtu+2jpX2Ntigf+Jj1dF9ew4lAobPzI2adaPE31z0p+5TcWngK6TvmWQUwK3lj4G+NDh1PDQ1w==}
-    peerDependencies:
-      react: '>=17.0.2'
-
   react-dom@19.3.0:
     resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
     peerDependencies:
@@ -3854,72 +3804,6 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
-
-  '@cropper/element-canvas@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/utils': 2.2.0
-
-  '@cropper/element-crosshair@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/utils': 2.2.0
-
-  '@cropper/element-grid@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/utils': 2.2.0
-
-  '@cropper/element-handle@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/utils': 2.2.0
-
-  '@cropper/element-image@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/element-canvas': 2.2.0
-      '@cropper/utils': 2.2.0
-
-  '@cropper/element-selection@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/element-canvas': 2.2.0
-      '@cropper/element-image': 2.2.0
-      '@cropper/utils': 2.2.0
-
-  '@cropper/element-shade@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/element-canvas': 2.2.0
-      '@cropper/element-selection': 2.2.0
-      '@cropper/utils': 2.2.0
-
-  '@cropper/element-viewer@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/element-canvas': 2.2.0
-      '@cropper/element-image': 2.2.0
-      '@cropper/element-selection': 2.2.0
-      '@cropper/utils': 2.2.0
-
-  '@cropper/element@2.2.0':
-    dependencies:
-      '@cropper/utils': 2.2.0
-
-  '@cropper/elements@2.2.0':
-    dependencies:
-      '@cropper/element': 2.2.0
-      '@cropper/element-canvas': 2.2.0
-      '@cropper/element-crosshair': 2.2.0
-      '@cropper/element-grid': 2.2.0
-      '@cropper/element-handle': 2.2.0
-      '@cropper/element-image': 2.2.0
-      '@cropper/element-selection': 2.2.0
-      '@cropper/element-shade': 2.2.0
-      '@cropper/element-viewer': 2.2.0
-
-  '@cropper/utils@2.2.0': {}
 
   '@dotenvx/dotenvx@1.75.1':
     dependencies:
@@ -5549,13 +5433,6 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  cropperjs@1.6.3: {}
-
-  cropperjs@2.2.0:
-    dependencies:
-      '@cropper/elements': 2.2.0
-      '@cropper/utils': 2.2.0
-
   cross-dirname@0.1.0:
     optional: true
 
@@ -6805,11 +6682,6 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.7.3
       unpipe: 1.0.0
-
-  react-cropper@2.3.3(react@19.3.0):
-    dependencies:
-      cropperjs: 1.6.3
-      react: 19.3.0
 
   react-dom@19.3.0(react@19.3.0):
     dependencies:

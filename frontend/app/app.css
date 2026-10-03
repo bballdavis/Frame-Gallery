@@ -56,6 +56,9 @@ body {
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-danger-surface: var(--danger-surface);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-foreground: var(--danger-foreground);
   --color-success: var(--success);
   --color-success-surface: var(--success-surface);
   --color-warning: var(--warning);
@@ -105,6 +108,11 @@ body {
   --destructive: #A43E43;
   --destructive-foreground: #FFFFFF;
   --danger-surface: #FAE7E6;
+  /* A solid red for destructive buttons, the same in both themes (the dark theme's
+     --destructive is a pale text tint, too soft to fill a button with). */
+  --danger: #A43E43;
+  --danger-hover: #8E3438;
+  --danger-foreground: #FFFFFF;
   --success: #46624D;
   --success-surface: #E9F0E7;
   --warning: #805C19;
@@ -153,6 +161,9 @@ body {
   --destructive: #EBA3A4;
   --destructive-foreground: #1E211F;
   --danger-surface: #482D2E;
+  --danger: #A43E43;
+  --danger-hover: #B84A4F;
+  --danger-foreground: #FFFFFF;
   --success: #A9C4AA;
   --success-surface: #293C2E;
   --warning: #E3C784;

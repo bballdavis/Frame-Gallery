@@ -5,6 +5,7 @@ import CropImageModal from "./CropImageModal";
 import ImageModal, { type TV, type AlbumOption } from "./imageModal";
 import { MATTE_COLORS, splitMatte, combineMatte } from "../utils/matte";
 import { Check as CheckIcon } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 export interface ImageCardProps {
   /** what the grid tile shows — may be a downscaled copy */
@@ -65,9 +66,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
   const [tileLoaded, setTileLoaded] = useState(false);
   const tileRef = useRef<HTMLImageElement>(null);
   const [imageURL, setImageURL] = useState(fullSrc ?? src);
-  const [selectedAlbum, setSelectedAlbum] = useState("");
   const [assigning, setAssigning] = useState(false);
-  const [assignMessage, setAssignMessage] = useState("");
   const [matteStyle, setMatteStyle] = useState("none");
   const [matteColor, setMatteColor] = useState<string>(MATTE_COLORS[0]);
   // Whether this send should carry a matte of its own. Left false, the request omits
@@ -144,6 +143,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
       }
       await sendToTV({ payload });
       setError("");
+      toast.success(`Sent to ${tvLabel(selectedTvIp)}`);
     } catch (e: any) {
       setError(e.message || "Failed to send to TV");
     } finally {
@@ -160,6 +160,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
     try {
       await playUploadedImage({ ip: selectedTvIp, filename: image?.filename });
       setError("");
+      toast.success(`Showing on ${tvLabel(selectedTvIp)}`);
     } catch (e: any) {
       setError(e.message || "Failed to play uploaded image on TV");
     } finally {
@@ -180,6 +181,11 @@ const ImageCard: React.FC<ImageCardProps> = ({
     }
   };
 
+  const tvLabel = (ip: string) => {
+    const tv = tvs.find((t) => t.ip === ip);
+    return tv?.name || tv?.ip || "the TV";
+  };
+
   const handleTvPowerOn = async () => {
     if (!selectedTvIp) {
       setError("Select a TV");
@@ -190,6 +196,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
     try {
       await tvPowerOn(tv?.ip || "", tv?.mac);
       setError("");
+      toast.success(`Turning on ${tvLabel(selectedTvIp)}`);
     } catch (e: any) {
       setError(e.message || "Failed to power on TV");
     } finally {
@@ -197,19 +204,13 @@ const ImageCard: React.FC<ImageCardProps> = ({
     }
   };
 
-  const handleAssignToAlbum = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    if (!selectedAlbum || !filename) {
-      setError("Select an album first.");
-      return;
-    }
+  const handleAssignToAlbum = async (albumName: string) => {
+    if (!filename) return;
     setAssigning(true);
     setError("");
-    setAssignMessage("");
     try {
-      await addImageToAlbum(selectedAlbum, filename);
-      setAssignMessage("Assigned to album.");
-      setSelectedAlbum("");
+      await addImageToAlbum(albumName, filename);
+      toast.success(`Added to ${albumName}`);
       onAssignSuccess?.();
     } catch (e: any) {
       setError(e.message || "Failed to assign image to album");
@@ -297,7 +298,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
         )}
       </div>
 
-      {showCropModal && isLocalImage && (
+      {isLocalImage && (
         <CropImageModal
           isOpen={showCropModal}
           imageUrl={imageURL}
@@ -312,15 +313,15 @@ const ImageCard: React.FC<ImageCardProps> = ({
         />
       )}
 
-      {/* Refactored Controls Modal */}
+      {/* Stays open under the cropper, so a crop comes back to it */}
       <ImageModal
         isOpen={showControlsModal}
         onClose={() => setShowControlsModal(false)}
         imageURL={imageURL}
         alt={alt}
+        title={title}
         filename={filename}
         image={image}
-        albums={albums}
         tvs={tvs}
         selectedTvIp={selectedTvIp}
         setSelectedTvIp={setSelectedTvIp}
@@ -330,6 +331,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
           setMatteTouched(true);
         }}
         matteColor={matteColor}
+        matteIsDefault={!matteTouched}
         setMatteColor={(color: string) => {
           setMatteColor(color);
           setMatteTouched(true);
@@ -342,15 +344,10 @@ const ImageCard: React.FC<ImageCardProps> = ({
         isLocalImage={isLocalImage}
         onDelete={onDelete ? handleDelete : undefined}
         deleteLoading={deleteLoading}
-        showCropModal={showCropModal}
-        setShowCropModal={setShowCropModal}
-        onCrop={onCrop}
+        onOpenCrop={() => setShowCropModal(true)}
         availableAlbums={availableAlbums}
-        selectedAlbum={selectedAlbum}
-        setSelectedAlbum={setSelectedAlbum}
-        handleAssignToAlbum={handleAssignToAlbum}
+        onAssignToAlbum={handleAssignToAlbum}
         assigning={assigning}
-        assignMessage={assignMessage}
       />
     </>
   );
