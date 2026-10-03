@@ -65,9 +65,19 @@ export default function ArtworkViewer({ artwork, source, added, onAdd, onClose }
             <FullImage key={`${artwork.source}:${artwork.id}`} artwork={artwork} />
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-white/15 bg-black/70 px-4 py-3 backdrop-blur sm:px-6">
+          {/* Close sits alone in the top-right corner, clear of the picture's details. */}
+          <Dialog.Close
+            aria-label="Close"
+            className="absolute right-3 top-3 z-10 inline-flex size-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur transition-colors hover:bg-black/75 focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none sm:right-5 sm:top-5"
+            style={{ marginTop: "env(safe-area-inset-top)" }}
+          >
+            <XMarkIcon weight="regular" className="size-5" aria-hidden="true" />
+          </Dialog.Close>
+
+          {/* The source's icon on the left and the add button on the right are the same size and sit on one line. */}
+          <div className="flex items-center gap-3 border-t border-white/15 bg-black/70 px-4 py-3 backdrop-blur sm:px-6">
             {source && <SourceLogo source={source} className="size-9" />}
-            <div className="min-w-0 flex-1 basis-60">
+            <div className="min-w-0 flex-1">
               <Dialog.Title className="truncate text-sm font-semibold sm:text-base">{artwork.title}</Dialog.Title>
               <Dialog.Description className="truncate text-xs text-white/75">
                 {[by, source?.name].filter(Boolean).join(" · ")}
@@ -91,22 +101,16 @@ export default function ArtworkViewer({ artwork, source, added, onAdd, onClose }
               </p>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              <Button
-                className="rounded-full bg-white text-neutral-950 hover:bg-white/90"
-                disabled={added}
-                onClick={() => onAdd(artwork)}
-              >
-                {added ? <CheckIcon aria-hidden="true" /> : <PlusIcon weight="regular" aria-hidden="true" />}
-                {added ? "Added" : "Add to gallery"}
-              </Button>
-              <Dialog.Close
-                aria-label="Close"
-                className="inline-flex size-9 items-center justify-center rounded-full border border-white/40 text-white transition-colors hover:bg-white/15 focus-visible:ring-[3px] focus-visible:ring-white focus-visible:outline-none"
-              >
-                <XMarkIcon weight="regular" className="size-5" aria-hidden="true" />
-              </Dialog.Close>
-            </div>
+            <Button
+              size="icon"
+              className="size-9 shrink-0 rounded-full bg-white text-neutral-950 hover:bg-white/90"
+              disabled={added}
+              onClick={() => onAdd(artwork)}
+              aria-label={added ? "Added to your gallery" : "Add to gallery"}
+              title={added ? "Added" : "Add to gallery"}
+            >
+              {added ? <CheckIcon className="size-5" aria-hidden="true" /> : <PlusIcon weight="regular" className="size-5" aria-hidden="true" />}
+            </Button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
