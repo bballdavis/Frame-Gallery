@@ -6,9 +6,14 @@ from urllib.parse import urlsplit
 from .artic import artic
 from .cleveland import cleveland
 from . import credentials
+from .bing import bing
 from .common import DiscoverError, DiskCache
+from .danbooru import danbooru
 from .deviantart import deviantart
 from .flickr import flickr
+from .getty import getty
+from .konachan import konachan
+from .mastodon import mastodon
 from .limits import Limiter
 from .met import met
 from .nasa import nasa
@@ -17,18 +22,18 @@ from .reframed import reframed
 from .smithsonian import cooper_hewitt, saam
 from .smk import smk
 from .wallhaven import wallhaven
-from .wikimedia import holidays, illustrations, louvre, modern, popart, posters, ukiyoe, world_museums
+from .wikimedia import holidays, illustrations, louvre, modern, nga, popart, posters, ukiyoe, world_museums, yale
 
 # Reframed first: its files are already 3840x2160.
 SOURCES = {
     source.id: source
     for source in (
-        reframed, artic, met, cleveland, smk, louvre, world_museums,
+        reframed, artic, met, cleveland, smk, getty, nga, yale, louvre, world_museums,
         # Modern, pop and illustrated work.
         modern, popart, saam, cooper_hewitt, illustrations, pixabay, flickr, ukiyoe,
         holidays, posters, nasa,
         # Not license-verified: personal use, and off until switched on in Settings.
-        wallhaven, deviantart,
+        wallhaven, danbooru, konachan, bing, mastodon, deviantart,
     )
 }
 

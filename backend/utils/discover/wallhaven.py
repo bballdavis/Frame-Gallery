@@ -10,6 +10,7 @@ import re
 from urllib.parse import urlsplit
 
 from .common import (
+    FLAGGED_MIN_WIDTH,
     PAGE_SIZE,
     DiscoverError,
     DownloadPlan,
@@ -70,7 +71,7 @@ class Wallhaven:
                 "categories": "110",   # general and anime; "people" is left out
                 "purity": "100",       # safe for work only
                 "sorting": "relevance",
-                "atleast": "1920x1080",
+                "atleast": f"{FLAGGED_MIN_WIDTH}x{FLAGGED_MIN_WIDTH * 9 // 16}",
                 "page": page,
             },
         ).json()

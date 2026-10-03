@@ -16,6 +16,7 @@ import requests
 from . import credentials
 from .common import (
     CONNECT_TIMEOUT,
+    FLAGGED_MIN_WIDTH,
     PAGE_SIZE,
     READ_TIMEOUT,
     USER_AGENT,
@@ -93,6 +94,7 @@ class DeviantArt:
             or not deviation.get("is_downloadable")
             or deviation.get("is_mature")
             or not content.get("src")
+            or (content.get("width") or 0) < FLAGGED_MIN_WIDTH
         ):
             return None
         published = deviation.get("published_time")

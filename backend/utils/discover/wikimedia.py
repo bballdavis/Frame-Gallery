@@ -368,6 +368,32 @@ illustrations = CommonsCollection(
     license_note=CREDIT_NOTE,
 )
 
+# Museums that donated their open-access images to Commons. The artist is read from the
+# "Artist - Title" file names these uploads use.
+nga = CommonsCollection(
+    id="nga",
+    name="National Gallery of Art",
+    short_name="the National Gallery of Art",
+    tagline="Open-access paintings from the National Gallery of Art in Washington, via Wikimedia Commons",
+    icon_url="https://www.nga.gov/favicon.ico",
+    category="Paintings in the National Gallery of Art (Washington, D.C.)",
+    default_query="landscape",
+    min_width=2500,
+    trust_artist_field=False,
+)
+
+yale = CommonsCollection(
+    id="yale",
+    name="Yale Center for British Art",
+    short_name="the Yale Center for British Art",
+    tagline="British paintings in the public domain from the Yale Center for British Art, via Wikimedia Commons",
+    icon_url="https://britishart.yale.edu/favicon.ico",
+    category="Paintings in the Yale Center for British Art",
+    default_query="landscape",
+    min_width=2500,
+    trust_artist_field=False,
+)
+
 ukiyoe = CommonsCollection(
     id="ukiyoe",
     name="Japanese woodblock prints",

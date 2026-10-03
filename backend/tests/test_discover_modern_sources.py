@@ -15,10 +15,12 @@ from utils.discover.deviantart import deviantart
 # The package re-exports the instance under the module's name, so fetch the module itself.
 deviantart_module = sys.modules["utils.discover.deviantart"]
 from utils.discover.flickr import flickr
+from utils.discover.getty import getty
+from utils.discover.mastodon import mastodon
 from utils.discover.pixabay import pixabay
 from utils.discover.smithsonian import cooper_hewitt, saam
 from utils.discover.wallhaven import wallhaven
-from utils.discover.wikimedia import illustrations, modern, popart, ukiyoe
+from utils.discover.wikimedia import illustrations, modern, nga, popart, ukiyoe, yale
 
 
 @pytest.fixture
@@ -57,7 +59,7 @@ def test_source_info_never_includes_a_secret(net):
 
 
 def test_personal_use_sources_are_flagged_and_the_rest_are_not(net):
-    assert {sid for sid, s in SOURCES.items() if source_info(s)["flagged"]} == {"wallhaven", "deviantart"}
+    assert {sid for sid, s in SOURCES.items() if source_info(s)["flagged"]} == {"wallhaven", "danbooru", "konachan", "bing", "mastodon", "deviantart"}
 
 
 # --- Smithsonian ---------------------------------------------------------------------
@@ -319,3 +321,129 @@ def test_deviantart_credentials_that_are_refused_fail_clearly(net, monkeypatch):
 
 def test_smithsonian_collections_have_distinct_units():
     assert (saam.unit, cooper_hewitt.unit) == ("SAAM", "CHNDM")
+
+
+# --- The Getty ----------------------------------------------------------------------------
+
+
+GETTY_OBJECT = "https://data.getty.edu/museum/collection/object/"
+GETTY_UUID = "4c4741f0-713c-4abe-af4e-979989bc2a6e"
+GETTY_IMAGE = "6785ee39-f024-4290-aa8a-41749380c72f"
+
+
+def getty_row(object_id=GETTY_UUID, title="Landscape with Ruins (83.GG.37)", artist="Jan Both", image=GETTY_IMAGE):
+    row = {
+        "o": {"value": GETTY_OBJECT + object_id},
+        "title": {"value": title},
+        "image": {"value": f"https://media.getty.edu/iiif/image/{image}/full/full/0/default.jpg"},
+    }
+    if artist:
+        row["maker"] = {"value": artist}
+    return row
+
+
+def getty_net(net, rows, width=4774, height=2928):
+    net.add("/sparql", FakeResponse({"results": {"bindings": rows}}))
+    net.add("/info.json", FakeResponse({"width": width, "height": height}))
+
+
+def test_getty_asks_for_cc0_works_whose_title_has_every_word_and_drops_the_accession_number(net):
+    getty_net(net, [getty_row(), getty_row("a" * 8 + "-0000-0000-0000-" + "b" * 12, "Ruins", None, "7fcffc06-b9e3-4664-9082-23ce76125a04")])
+
+    page = getty.search('landscape" } DROP', 1, True, "any")
+
+    query = net.calls[0]["params"]["query"]
+    assert "creativecommons.org/publicdomain/zero/1.0/" in query
+    assert query.count('CONTAINS(LCASE(STR(?label)), "landscape")') == 1 and '"drop"' in query
+    assert 'landscape"' not in query.replace('"landscape")', "")   # typed quotes and braces are neutralised
+    assert "300033618" in query and "LIMIT 25 OFFSET 0" in query   # paintings only; one extra row asks "is there more"
+    first = page["results"][0]
+    assert (first["title"], first["artist"], first["license"]) == ("Landscape with Ruins", "Jan Both", "Public domain (CC0)")
+    assert (first["width"], first["height"]) == (4774, 2928)
+    assert first["thumb_url"] == f"https://media.getty.edu/iiif/image/{GETTY_IMAGE}/full/480,/0/default.jpg"
+    assert page["results"][1]["artist"] == "Unknown artist" and page["has_more"] is False
+
+
+def test_getty_scales_big_pictures_on_the_museums_image_server(net):
+    getty_net(net, [getty_row()], width=9000, height=6000)
+
+    plan = getty.plan(GETTY_UUID, "fill")
+
+    assert plan.url == f"https://media.getty.edu/iiif/image/{GETTY_IMAGE}/full/3840,/0/default.jpg"
+    assert (plan.width, plan.height) == (3840, 2560) and plan.artist == "Jan Both"
+    with pytest.raises(DiscoverError):
+        getty.plan("not-an-id", "fill")
+
+
+def test_getty_does_not_lose_a_picture_whose_size_it_cannot_read(net):
+    net.add("/sparql", FakeResponse({"results": {"bindings": [getty_row()]}}))
+    net.add("/info.json", FakeResponse({}, status=500))
+
+    item = getty.search("landscape", 1, True, "any")["results"][0]
+
+    assert item["width"] is None and item["crop_loss"] is None
+
+
+# --- Mastodon (flagged) ---------------------------------------------------------------------
+
+
+def toot(status_id, width=3000, height=2000, sensitive=False, host="files.mastodon.social", media_type="image", reblog=None):
+    return {
+        "id": status_id, "sensitive": sensitive, "reblog": reblog, "url": f"https://mastodon.art/@maker/{status_id}",
+        "created_at": "2026-09-01T10:00:00Z", "content": "<p>Fresh <b>sketch</b></p>", "tags": [{"name": "mastoart"}],
+        "account": {"display_name": "Maker", "acct": "maker@mastodon.art"},
+        "media_attachments": [{"id": "9", "type": media_type, "url": f"https://{host}/cache/a.png",
+                               "preview_url": f"https://{host}/cache/a_s.png", "description": "A cat in neon light",
+                               "meta": {"original": {"width": width, "height": height}}}],
+    }
+
+
+def test_mastodon_reads_a_tag_and_skips_sensitive_small_or_foreign_hosted_pictures(net):
+    net.add("timelines/tag/", FakeResponse([
+        toot("1"), toot("2", sensitive=True), toot("3", width=1700, height=1200), toot("4", host="evil.example"),
+        toot("5", media_type="video"), toot("6", reblog={"id": "x"}),
+    ]))
+
+    page = mastodon.search("#Pixel Art!", 1, True, "any")
+
+    call = net.calls[0]
+    assert call["url"].endswith("/timelines/tag/Pixel") and call["params"]["only_media"] == "true"
+    assert [item["id"] for item in page["results"]] == ["1:9"]   # 1700 px wide is under the 1920 floor
+    item = page["results"][0]
+    assert (item["title"], item["artist"], item["license"]) == ("A cat in neon light", "Maker", "License not verified (personal use)")
+    assert mastodon.flagged is True and mastodon.from_url("https://mastodon.social/@a/123") == "123"
+
+
+def test_mastodon_download_is_the_original_picture_of_that_post(net):
+    net.add("/api/v1/statuses/", FakeResponse(toot("77")))
+
+    plan = mastodon.plan("77:9", "fill")
+
+    assert plan.url == "https://files.mastodon.social/cache/a.png" and (plan.width, plan.height) == (3000, 2000)
+    assert plan.page_url == "https://mastodon.art/@maker/77"
+    with pytest.raises(DiscoverError):
+        mastodon.plan("x:9", "fill")
+
+
+# --- Museums that donated their images to Commons -------------------------------------------
+
+
+def test_the_nga_and_yale_collections_search_their_own_commons_category(net):
+    net.add("w/api.php", FakeResponse({"query": {"pages": {}}}))
+
+    nga.search("monet", 1, True, "any")
+    yale.search("", 1, True, "any")
+
+    nga_search, yale_search = (c["params"]["gsrsearch"] for c in net.calls)
+    assert nga_search.startswith('deepcategory:"Paintings in the National Gallery of Art (Washington, D.C.)" monet')
+    assert yale_search.startswith('deepcategory:"Paintings in the Yale Center for British Art" landscape')
+
+
+def test_deviantart_leaves_out_pictures_under_the_floor_for_unverified_sources(net):
+    set_keys(deviantart={"client_id": "id", "client_secret": "secret"})
+    small = da_deviation("2")
+    small["content"]["width"] = 1500
+    net.add("oauth2/token", FakeResponse({"access_token": "tok", "expires_in": 3600}))
+    net.add("browse/popular", FakeResponse({"results": [da_deviation("1"), small]}))
+
+    assert [item["id"] for item in deviantart.search("x", 1, True, "any")["results"]] == ["1"]
