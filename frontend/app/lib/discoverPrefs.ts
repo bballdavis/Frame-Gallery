@@ -21,9 +21,9 @@ export function setDisabledSources(disabled: Set<string>) {
   }
 }
 
-// Optional sources are the other way round: off until the person switches them on, so only
-// the ones they chose are stored. These are the ones whose license is not verified (personal
-// use) and the ones that need a key.
+// Sources that need an API key are the other way round: off until the person switches them on
+// (and saves a key), so only the ones they chose are stored. Every source that needs no key
+// follows the "all sources" setting above.
 const FLAGGED_KEY = "discover.enabledFlaggedSources";
 
 export function getEnabledFlaggedSources(): Set<string> {
@@ -46,12 +46,12 @@ export function setEnabledFlaggedSources(enabled: Set<string>) {
 
 type Optional = { id: string; flagged?: boolean; credentials?: { configured: boolean } | null };
 
-/** Whether a source starts switched off: personal-use ones, and ones that need a key. */
+/** Whether a source starts switched off: the ones that need a key. */
 export function isOptional(source: Optional): boolean {
-  return Boolean(source.flagged || source.credentials);
+  return Boolean(source.credentials);
 }
 
-/** The sources to show: ordinary ones unless switched off; optional ones only if switched on, with their key saved. */
+/** The sources to show: key-free ones unless switched off; keyed ones only if switched on, with their key saved. */
 export function visibleSources<T extends Optional>(all: T[]): T[] {
   const off = getDisabledSources();
   const optionalOn = getEnabledFlaggedSources();

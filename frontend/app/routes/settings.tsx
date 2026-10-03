@@ -153,7 +153,7 @@ export default function Settings() {
   const [discoverSources, setDiscoverSources] = React.useState<DiscoverSource[]>([]);
   const [customizeSources, setCustomizeSourcesState] = React.useState(false);
   const [disabledSources, setDisabledState] = React.useState<Set<string>>(new Set());
-  // Sources whose license is not verified are off until chosen here.
+  // Sources that need a key are off until chosen here.
   const [enabledFlagged, setEnabledFlaggedState] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
@@ -189,8 +189,8 @@ export default function Settings() {
     setEnabledFlaggedSources(next);
   };
 
-  const verifiedSources = discoverSources.filter((s) => !isOptional(s));
-  const optionalSources = discoverSources.filter((s) => isOptional(s));
+  const freeSources = discoverSources.filter((s) => !isOptional(s));
+  const keyedSources = discoverSources.filter((s) => isOptional(s));
   const reloadSources = () => fetchSources().then(({ sources }) => setDiscoverSources(sources)).catch(() => {});
 
   // Fetch TVs
@@ -550,22 +550,29 @@ export default function Settings() {
             <span>
               <span className="block font-semibold text-foreground">All sources</span>
               <span className="block text-sm text-muted-foreground">
-                Search every art source. Turn this off to choose which ones to use.
+                Search every source that needs no key, and any added later. Turn this off to choose which ones to use.
               </span>
             </span>
             <Switch checked={!customizeSources} onCheckedChange={handleToggleAllSources} aria-label="Use all Discover sources" />
           </label>
           {customizeSources && (
             <ul className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
-              {verifiedSources.map((s) => {
+              {freeSources.map((s) => {
                 const on = !disabledSources.has(s.id);
-                const lastOn = on && verifiedSources.filter((v) => !disabledSources.has(v.id)).length <= 1;
+                const lastOn = on && freeSources.filter((v) => !disabledSources.has(v.id)).length <= 1;
                 return (
                   <li key={s.id}>
                     <label className="flex items-center gap-3">
                       <SourceLogo source={s} className="size-9" />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium text-foreground">{s.name}</span>
+                        <span className="flex items-center gap-2">
+                          <span className="truncate font-medium text-foreground">{s.name}</span>
+                          {s.flagged && (
+                            <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Personal use
+                            </span>
+                          )}
+                        </span>
                         <span className="block truncate text-sm text-muted-foreground">{s.tagline}</span>
                       </span>
                       <Switch
@@ -581,17 +588,14 @@ export default function Settings() {
               {discoverSources.length === 0 && <li className="text-sm text-muted-foreground">Could not load the sources.</li>}
             </ul>
           )}
-          {optionalSources.length > 0 && (
+          {keyedSources.length > 0 && (
             <div className="mt-4 border-t border-border pt-4">
-              <h3 className="font-semibold text-foreground">More sources</h3>
+              <h3 className="font-semibold text-foreground">Sources that need a key</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                These are off until you turn them on. Some need a free key from the site. The ones marked
-                "License not verified" do not say what their pictures may be used for, so every picture stays the
-                artist's own work: keep those to personal use. They are never in the daily highlights, and imports
-                still credit the artist and link back to the page.
+                These are off until you turn one on and save its free key from the site.
               </p>
               <ul className="mt-3 flex flex-col gap-4">
-                {optionalSources.map((s) => (
+                {keyedSources.map((s) => (
                   <OptionalSource
                     key={s.id}
                     source={s}

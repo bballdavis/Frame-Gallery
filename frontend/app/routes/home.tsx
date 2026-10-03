@@ -225,7 +225,7 @@ export default function Home() {
         if (!pick) return;
         setDiscoverSlide({
           key: `discover:${pick.source}:${pick.id}`,
-          topic: "From Discover",
+          topic: "Discover",
           filename: "",
           imageUrl: pick.hero_url || pick.thumb_url,
           title: pick.title,
