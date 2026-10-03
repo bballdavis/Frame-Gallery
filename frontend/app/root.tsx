@@ -11,6 +11,10 @@ import { ThemeProvider } from "next-themes";
 import { IconContext } from "@phosphor-icons/react";
 
 import type { Route } from "./+types/root";
+// Inter is bundled with the app rather than fetched from Google Fonts: that stylesheet
+// blocked the first paint on a round trip to another site. Font files load only when used.
+import "@fontsource-variable/inter/opsz.css";
+import "@fontsource-variable/inter/opsz-italic.css";
 import "./app.css";
 import LoadingScreen from "./components/loading-screen";
 import SessionGuard from "./components/SessionGuard";
@@ -20,16 +24,6 @@ export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
   { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
   { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

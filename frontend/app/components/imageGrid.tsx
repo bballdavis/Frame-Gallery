@@ -8,6 +8,7 @@ interface ImageGridProps {
   onImageClick?: (img: any) => void;
   onDeleteImage?: (img: any) => void;
   onAssignSuccess?: () => void;
+  /** Pass the list when the page already has it; left out, the tiles share one fetch */
   tvs?: any[];
   /** filenames currently selected; passing this turns the checkboxes on */
   selectedFilenames?: string[];
@@ -20,7 +21,7 @@ export default function ImageGrid({
   onImageClick,
   onDeleteImage,
   onAssignSuccess,
-  tvs = [],
+  tvs,
   selectedFilenames,
   onToggleSelect,
 }: ImageGridProps) {

@@ -689,6 +689,7 @@ export default function Gallery() {
                     filename={img.filename}
 
                     image={img}
+                    tvs={tvs}
                     showControls={false}
                   />
                 ))}

@@ -204,6 +204,13 @@ export async function deleteAlbum(album: string) {
  * original — a grid tile does not need a full-resolution artwork. Only 160, 400 and
  * 800 are generated; anything else silently serves the original.
  */
+/** An upload's pixel size, read on the server so the original need not be downloaded. */
+export async function fetchImageSize(filename: string): Promise<{ width: number; height: number }> {
+  const res = await fetch(`${API_BASE}/api/images/${encodeURIComponent(filename)}/size`);
+  if (!res.ok) throw new Error('Failed to read image size');
+  return await res.json();
+}
+
 export function getUploadUrl(filename: string, width?: 160 | 400 | 800) {
   const base = `${API_BASE}/uploads/${encodeURIComponent(filename)}`;
   return width ? `${base}?w=${width}` : base;

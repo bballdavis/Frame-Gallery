@@ -17,6 +17,7 @@ import {
 import { MATTE_STYLES, MATTE_COLORS, MATTE_STYLE_LABELS, MATTE_COLOR_LABELS, MATTE_SWATCHES } from "../utils/matte";
 import { Tooltip } from "./ui/tooltip";
 import MattePreview from "./MattePreview";
+import { fetchImageSize } from "../utils/galleryApi";
 
 export interface TV {
   ip: string;
@@ -177,18 +178,26 @@ const ImageModal: React.FC<ImageModalProps> = ({
     if (!isOpen) setConfirmingDelete(false);
   }, [isOpen]);
 
-  // The picture's own size, for the details.
+  // The picture's own size, for the details. The preview is a downscaled copy, so for an
+  // upload the server reads the size from the original's header; anything else is measured
+  // from what was loaded. (imageURL changes after a crop, which re-reads it.)
   const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
   React.useEffect(() => {
     if (!isOpen || !imageURL) return;
     let live = true;
-    const probe = new Image();
-    probe.onload = () => live && setSize({ w: probe.naturalWidth, h: probe.naturalHeight });
-    probe.src = imageURL;
+    if (isLocalImage && filename) {
+      fetchImageSize(filename)
+        .then(({ width, height }) => live && setSize({ w: width, h: height }))
+        .catch(() => live && setSize(null));
+    } else {
+      const probe = new Image();
+      probe.onload = () => live && setSize({ w: probe.naturalWidth, h: probe.naturalHeight });
+      probe.src = imageURL;
+    }
     return () => {
       live = false;
     };
-  }, [isOpen, imageURL]);
+  }, [isOpen, imageURL, isLocalImage, filename]);
 
   const selectedTv = tvs.find((t) => t.ip === selectedTvIp);
   const isOneSlotMode = !!selectedTv?.one_slot_mode;

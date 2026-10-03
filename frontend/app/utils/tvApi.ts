@@ -70,10 +70,20 @@ export async function playUploadedImage({ ip, filename }: { ip: string, filename
 }
 
 // TV management (add/get TVs)
+// Callers that ask at the same moment (every tile in a grid, say) share one request.
+let tvsInFlight: Promise<any> | null = null;
+
 export async function getTvs() {
-  const res = await fetch(`${API_BASE}/api/tvs`);
-  if (!res.ok) throw new Error((await res.json()).error || 'Failed to get TVs');
-  return (await res.json()).tvs;
+  if (!tvsInFlight) {
+    tvsInFlight = (async () => {
+      const res = await fetch(`${API_BASE}/api/tvs`);
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed to get TVs');
+      return (await res.json()).tvs;
+    })().finally(() => {
+      tvsInFlight = null;
+    });
+  }
+  return tvsInFlight;
 }
 
 export async function discoverTvs(): Promise<DiscoveredTV[]> {

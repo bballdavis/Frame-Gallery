@@ -1,4 +1,5 @@
 import base64
+import gzip
 import hashlib
 import importlib
 import os
@@ -146,6 +147,57 @@ def _log_slow_request(exc):
         )
 
 
+# Text responses (the built JavaScript and CSS above all) are gzipped: they shrink to about a
+# quarter, which matters most on a first visit from outside the house.
+_COMPRESSIBLE = ('text/', 'application/json', 'application/javascript', 'image/svg+xml')
+_COMPRESS_MIN_BYTES = 1024
+# The built assets are named after their content and never change, so each is gzipped once
+# per worker and the result reused.
+_gzipped_assets: dict = {}
+_GZIPPED_ASSETS_MAX = 256
+
+
+@app.after_request
+def _gzip_response(response):
+    if (
+        response.status_code != 200
+        or request.method not in ('GET', 'HEAD')
+        or 'gzip' not in request.headers.get('Accept-Encoding', '').lower()
+        or 'Content-Encoding' in response.headers
+        or not (response.mimetype or '').startswith(_COMPRESSIBLE)
+        or (response.content_length is not None and response.content_length < _COMPRESS_MIN_BYTES)
+    ):
+        return response
+
+    immutable = request.path.startswith('/assets/')
+    body = _gzipped_assets.get(request.path) if immutable else None
+    # A file response streams from an open file; it is replaced below, so close it here
+    # rather than leave the handle for the garbage collector.
+    original = response.response
+    response.direct_passthrough = False
+    if body is None:
+        data = response.get_data()
+        if hasattr(original, 'close'):
+            original.close()
+        if len(data) < _COMPRESS_MIN_BYTES:
+            return response
+        body = gzip.compress(data, compresslevel=6)
+        if immutable and len(_gzipped_assets) < _GZIPPED_ASSETS_MAX:
+            _gzipped_assets[request.path] = body
+    elif hasattr(original, 'close'):
+        original.close()
+
+    response.set_data(body)
+    response.headers['Content-Encoding'] = 'gzip'
+    response.vary.add('Accept-Encoding')
+    # The bytes differ from the file's, so its validator becomes a weak one. Revalidation
+    # still matches: If-None-Match is compared weakly.
+    etag = response.headers.get('ETag')
+    if etag and not etag.startswith('W/'):
+        response.headers['ETag'] = f'W/{etag}'
+    return response
+
+
 # Fallback CORS headers for any route, so front-end dev or production can call /api and /uploads without CORS blocking.
 @app.after_request
 def add_cors_headers(response):
@@ -162,6 +214,29 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{frametv_db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from models import TV, Album, AppSetting, Image, ProviderConfig, UploadedImage, db
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+
+
+@event.listens_for(Engine, "connect")
+def _tune_sqlite(dbapi_connection, _record):
+    """Let the gunicorn workers share the database without blocking one another.
+
+    In SQLite's default rollback-journal mode a write locks readers out until it is on
+    disk, so one slow commit stalls every other worker's page load. WAL lets reads carry
+    on during a write, and busy_timeout makes a second writer wait briefly instead of
+    failing straight away.
+    """
+    if not isinstance(dbapi_connection, sqlite3.Connection):
+        return
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA busy_timeout=5000")
+    finally:
+        cursor.close()
+
 
 db.init_app(app)
 
@@ -804,6 +879,32 @@ def _mark_manual_upload(image) -> None:
     """A file someone put here themselves, not one fetched from a source."""
     image.source = 'upload'
     image.source_id = image.source_url = image.title = image.artist = image.license = None
+
+
+@app.route('/api/images/<filename>/size', methods=['GET'])
+def api_image_size(filename):
+    """Pixel size of an upload, as it is shown upright, read from its header only.
+
+    Lets the image dialog say how big a picture is without downloading the original.
+    """
+    try:
+        _, source_path = _normalized_upload_path(filename, must_exist=True)
+    except ValueError:
+        return {'error': 'Invalid filename'}, 400
+    except FileNotFoundError:
+        return {'error': 'Image not found'}, 404
+    try:
+        from PIL import Image as PILImage
+
+        with PILImage.open(source_path) as img:
+            width, height = img.size
+            # EXIF orientations 5-8 are turned a quarter, which swaps the sides.
+            if img.getexif().get(0x0112) in (5, 6, 7, 8):
+                width, height = height, width
+    except Exception as e:
+        _log_exception('Failed to read image size', e)
+        return _error_response('Failed to read image size', 500)
+    return {'width': width, 'height': height}
 
 
 @app.route('/api/images/details', methods=['GET'])

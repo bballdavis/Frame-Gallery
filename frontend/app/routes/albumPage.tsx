@@ -200,6 +200,7 @@ export default function AlbumPage() {
             ) : (
               <ImageGrid
                 images={album.images.map(img => ({ id: img.id, filename: img.filename, type: 'local' }))}
+                tvs={tvs}
                 onDeleteImage={(img) => handleRemoveFromAlbum(img.id)}
               />
             )}

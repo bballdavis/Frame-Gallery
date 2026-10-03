@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getTvs, sendToTV, playUploadedImage, tvPowerOn, type TVInfo } from "../utils/tvApi";
-import { addImageToAlbum } from "../utils/galleryApi";
+import { addImageToAlbum, getUploadUrl } from "../utils/galleryApi";
 import CropImageModal from "./CropImageModal";
 import ImageModal, { type TV, type AlbumOption } from "./imageModal";
 import { MATTE_COLORS, splitMatte, combineMatte } from "../utils/matte";
@@ -66,6 +66,14 @@ const ImageCard: React.FC<ImageCardProps> = ({
   const [tileLoaded, setTileLoaded] = useState(false);
   const tileRef = useRef<HTMLImageElement>(null);
   const [imageURL, setImageURL] = useState(fullSrc ?? src);
+  // The dialog's preview is a few hundred pixels wide, so an 800px copy looks the same as
+  // the original and is a fraction of the download. The cropper still gets the original.
+  // (Provider images have no local copies to shrink.)
+  const previewFor = (cacheBust?: number) =>
+    filename && (image?.type === "local" || !image?.type)
+      ? `${getUploadUrl(filename, 800)}${cacheBust ? `&t=${cacheBust}` : ""}`
+      : fullSrc ?? src;
+  const [previewURL, setPreviewURL] = useState(() => previewFor());
   const [assigning, setAssigning] = useState(false);
   const [matteStyle, setMatteStyle] = useState("none");
   const [matteColor, setMatteColor] = useState<string>(MATTE_COLORS[0]);
@@ -85,17 +93,16 @@ const ImageCard: React.FC<ImageCardProps> = ({
     (album) => filename && !album.images.includes(filename)
   );
 
-  // Sync or fetch TV list
+  // A page that has the TV list passes it down (even while it is still empty); only a tile
+  // left without one fetches it, and tiles fetching together share a single request.
   useEffect(() => {
-    if (tvsProp && tvsProp.length > 0) {
+    if (tvsProp) {
       setTvs(tvsProp);
       return;
     }
-    if (tvs.length === 0) {
-      getTvs()
-        .then((fetchedTvs) => setTvs(fetchedTvs || []))
-        .catch(() => setTvs([]));
-    }
+    getTvs()
+      .then((fetchedTvs) => setTvs(fetchedTvs || []))
+      .catch(() => setTvs([]));
   }, [tvsProp]);
 
   // Default to the first TV, so sending an image is one click away.
@@ -108,6 +115,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
   useEffect(() => {
     setTileURL(src);
     setImageURL(fullSrc ?? src);
+    setPreviewURL(previewFor());
   }, [src, fullSrc]);
 
   // A cached picture can finish before React attaches onLoad, so check once it is in place.
@@ -306,7 +314,9 @@ const ImageCard: React.FC<ImageCardProps> = ({
           onClose={() => setShowCropModal(false)}
           onCropSuccess={(newUrl) => {
             setImageURL(newUrl);
-            setTileURL(`${src}${src.includes("?") ? "&" : "?"}t=${Date.now()}`);
+            const now = Date.now();
+            setTileURL(`${src}${src.includes("?") ? "&" : "?"}t=${now}`);
+            setPreviewURL(previewFor(now));
             setShowCropModal(false);
             onCrop?.();
           }}
@@ -317,7 +327,7 @@ const ImageCard: React.FC<ImageCardProps> = ({
       <ImageModal
         isOpen={showControlsModal}
         onClose={() => setShowControlsModal(false)}
-        imageURL={imageURL}
+        imageURL={previewURL}
         alt={alt}
         title={title}
         filename={filename}
