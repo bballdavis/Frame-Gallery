@@ -46,7 +46,7 @@ interface DiscoverHeroProps {
   collapsed: boolean;
   onAdd: (artwork: Artwork) => void;
   onView: (artwork: Artwork) => void;
-  onBrowse: (sourceId: string) => void;
+  onBrowse: (artwork: Artwork) => void;
 }
 
 export default function DiscoverHero({ items, sources, collapsed, onAdd, onView, onBrowse }: DiscoverHeroProps) {
@@ -164,13 +164,13 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onView,
                             </Button>
                           </Tooltip>
                           {source && (
-                            <Tooltip label={`More from ${source.short_name.replace(/^the /i, "")}`}>
+                            <Tooltip label={`Find this at ${source.short_name.replace(/^the /i, "")}`}>
                               <Button
                                 size="icon"
                                 variant="outline"
                                 className="rounded-full border-white/60 bg-transparent text-white hover:bg-white/15 hover:text-white"
-                                aria-label={`More from ${source.short_name.replace(/^the /i, "")}`}
-                                onClick={() => onBrowse(source.id)}
+                                aria-label={`Find ${art.title} at ${source.short_name.replace(/^the /i, "")}`}
+                                onClick={() => onBrowse(art)}
                               >
                                 <ArrowUpRightIcon className="size-5" aria-hidden="true" />
                               </Button>

@@ -383,6 +383,15 @@ export default function Discover() {
     window.setTimeout(() => searchBar.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 560);
   }
 
+  /** The hero's launch button: open the picture's own source and search for it by title. */
+  function findAtSource(art: Artwork) {
+    flushNext.current = true;
+    setScope(art.source);
+    setQueryInput(art.title);
+    setQuery(art.title.trim());
+    window.setTimeout(() => searchBar.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 560);
+  }
+
   function chooseScope(next: string) {
     setScope(next);
     // Choosing a source is a decision: search it now, with whatever is typed.
@@ -509,7 +518,7 @@ export default function Discover() {
         collapsed={heroCollapsed}
         onAdd={openAdd}
         onView={setViewing}
-        onBrowse={chooseScope}
+        onBrowse={findAtSource}
       />
 
       {/* Search: results update as you type */}

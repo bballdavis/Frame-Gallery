@@ -56,7 +56,7 @@ function buildSlides(images: string[], albums: AlbumSummary[], details: Record<s
     used.add(filename);
     slides.push({
       key: `latest:${filename}`,
-      topic: "Latest added",
+      topic: "Latest",
       filename,
       ...describe(filename, details),
       to: "/gallery",
@@ -68,7 +68,7 @@ function buildSlides(images: string[], albums: AlbumSummary[], details: Record<s
     used.add(filename);
     slides.push({
       key: `random:${filename}`,
-      topic: "Random picks",
+      topic: "Random",
       filename,
       ...describe(filename, details),
       to: "/gallery",
@@ -80,7 +80,7 @@ function buildSlides(images: string[], albums: AlbumSummary[], details: Record<s
     const cover = shuffled(album.images)[0];
     slides.push({
       key: `album:${album.id}`,
-      topic: "From your albums",
+      topic: "Albums",
       filename: cover,
       title: album.name,
       subtitle: `Album · ${album.images.length} image${album.images.length === 1 ? "" : "s"}`,
