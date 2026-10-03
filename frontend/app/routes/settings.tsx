@@ -9,7 +9,7 @@ import { getBackupUrl, reconcileImages } from '~/utils/galleryApi';
 import { toast } from 'sonner';
 
 import type { ProviderConfig } from '~/utils/providerApi';
-import { Images as ImagesIcon, Pencil as PencilIcon, Plus as PlusIcon, Sparkle as SparklesIcon } from "@phosphor-icons/react";
+import { CircleNotch as SpinnerIcon, Images as ImagesIcon, Pencil as PencilIcon, Plus as PlusIcon, Sparkle as SparklesIcon } from "@phosphor-icons/react";
 import { splitMatte } from '~/utils/matte';
 import { Switch } from '~/components/ui/switch';
 import { TvEditModal, type TV } from '~/components/TvEditModal';
@@ -30,75 +30,95 @@ import {
   setEnabledFlaggedSources,
 } from '~/lib/discoverPrefs';
 
-/** One source that is off until chosen: a switch, and the key form once it is switched on. */
+/** The service's own logo for a row that groups several sources (each source has its museum's icon, not the umbrella's). */
+const SERVICE_ICONS: Record<string, string> = {
+  smithsonian: "https://www.si.edu/apple-touch-icon.png",
+};
+
+/** What to call a group of sources that share one key: the service ("Smithsonian"), or the source itself when alone. */
+function groupName(sources: DiscoverSource[]) {
+  return sources.length > 1 ? (sources[0].credentials?.label ?? sources[0].name) : sources[0].name;
+}
+
+/**
+ * One key-needing service that is off until chosen: a switch, and the key form once it is
+ * switched on. Sources that share a key (the Smithsonian's two museums) are one row.
+ */
 function OptionalSource({
-  source,
+  sources,
   on,
   onToggle,
   onSaved,
 }: {
-  source: DiscoverSource;
+  sources: DiscoverSource[];
   on: boolean;
   onToggle: (next: boolean) => void;
-  onSaved: () => void;
+  /** Resolves once the sources have been reloaded, so the form can stay busy until the page reflects the change */
+  onSaved: () => Promise<unknown>;
 }) {
+  const source = sources[0];
+  const name = groupName(sources);
+  const description = sources.length > 1 ? sources.map((s) => s.name).join(" and ") : source.tagline;
   const creds = source.credentials;
   const [values, setValues] = React.useState<Record<string, string>>({});
-  const [busy, setBusy] = React.useState(false);
+  const [busy, setBusy] = React.useState<"" | "saving" | "removing">("");
   const [problem, setProblem] = React.useState("");
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!creds) return;
-    setBusy(true);
+    if (!creds || busy) return;
+    setBusy("saving");
     setProblem("");
     try {
       await saveCredentials(creds.service, values);
       setValues({});
-      onSaved();
+      await onSaved();
+      toast.success(`${creds.label} key saved`);
     } catch (e: any) {
       setProblem(e.message || "Could not save the key");
     } finally {
-      setBusy(false);
+      setBusy("");
     }
   };
 
   const remove = async () => {
-    if (!creds) return;
-    setBusy(true);
+    if (!creds || busy) return;
+    setBusy("removing");
+    setProblem("");
     try {
       await clearCredentials(creds.service);
-      onSaved();
+      await onSaved();
     } catch (e: any) {
       setProblem(e.message || "Could not remove the key");
     } finally {
-      setBusy(false);
+      setBusy("");
     }
   };
 
   return (
     <li>
       <label className="flex items-center gap-3">
-        <SourceLogo source={source} className="size-9" />
+        <SourceLogo source={source} src={sources.length > 1 ? SERVICE_ICONS[creds?.service ?? ""] : undefined} className="size-9" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium text-foreground">{source.name}</span>
-          <span className="block truncate text-sm text-muted-foreground">{source.tagline}</span>
+          <span className="block truncate font-medium text-foreground">{name}</span>
+          <span className="block truncate text-sm text-muted-foreground">{description}</span>
         </span>
-        <Switch checked={on} onCheckedChange={onToggle} aria-label={`Use ${source.name}`} />
+        <Switch checked={on} onCheckedChange={onToggle} aria-label={`Use ${name}`} />
       </label>
       {on && creds && (
         <div className="mt-3 ml-12 rounded-xl border border-border bg-muted/40 p-3">
           {creds.configured ? (
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm text-foreground">{creds.label} key saved. It is kept on this server and never shown again.</p>
-              <Button type="button" variant="outline" size="sm" disabled={busy} onClick={remove}>
-                Remove key
+              <Button type="button" variant="outline" size="sm" disabled={busy !== ""} onClick={remove}>
+                {busy === "removing" && <SpinnerIcon className="animate-spin" aria-hidden="true" />}
+                {busy === "removing" ? "Removing…" : "Remove key"}
               </Button>
             </div>
           ) : (
-            <form onSubmit={save} className="flex flex-col gap-2">
+            <form onSubmit={save} aria-busy={busy === "saving"} className="flex flex-col gap-2">
               <p className="text-sm text-muted-foreground">
-                {source.name} needs a free {creds.label} key before it shows up in Discover.{" "}
+                {name} needs a free {creds.label} key before it shows up in Discover.{" "}
                 <a href={creds.help_url} target="_blank" rel="noreferrer" className="underline underline-offset-2 text-foreground">
                   Get one
                 </a>
@@ -113,15 +133,23 @@ function OptionalSource({
                     onChange={(e) => setValues({ ...values, [field.name]: e.target.value })}
                     placeholder={field.label}
                     aria-label={`${creds.label} ${field.label}`}
+                    disabled={busy !== ""}
                   />
                 ))}
-                <Button type="submit" disabled={busy || creds.fields.some((f) => !(values[f.name] ?? "").trim())}>
-                  Save
+                <Button type="submit" disabled={busy !== "" || creds.fields.some((f) => !(values[f.name] ?? "").trim())}>
+                  {busy === "saving" && <SpinnerIcon className="animate-spin" aria-hidden="true" />}
+                  {busy === "saving" ? "Saving…" : "Save"}
                 </Button>
               </div>
+              {busy === "saving" && (
+                <p role="status" className="text-sm text-muted-foreground">
+                  Checking and saving your key. This can take a few seconds.
+                </p>
+              )}
               {problem && <p className="text-sm text-destructive">{problem}</p>}
             </form>
           )}
+          {creds.configured && problem && <p className="mt-2 text-sm text-destructive">{problem}</p>}
         </div>
       )}
     </li>
@@ -186,10 +214,12 @@ export default function Settings() {
     setDisabledSources(next);
   };
 
-  const handleToggleFlagged = (id: string, on: boolean) => {
+  const handleToggleFlagged = (ids: string[], on: boolean) => {
     const next = new Set(enabledFlagged);
-    if (on) next.add(id);
-    else next.delete(id);
+    for (const id of ids) {
+      if (on) next.add(id);
+      else next.delete(id);
+    }
     setEnabledFlaggedState(next);
     setEnabledFlaggedSources(next);
   };
@@ -210,6 +240,15 @@ export default function Settings() {
     setSourceOrder([...ids, ...getSourceOrder().filter((id) => !ids.includes(id))]);
     setOrderVersion((n) => n + 1);
   };
+  // Sources that share one key are shown as one row.
+  const keyedGroups = React.useMemo(() => {
+    const groups = new Map<string, DiscoverSource[]>();
+    for (const s of keyedSources) {
+      const key = s.credentials?.service ?? s.id;
+      groups.set(key, [...(groups.get(key) ?? []), s]);
+    }
+    return [...groups.values()];
+  }, [keyedSources]);
   const reloadSources = () => fetchSources().then(({ sources }) => setDiscoverSources(sources)).catch(() => {});
 
   // Fetch TVs
@@ -614,12 +653,12 @@ export default function Settings() {
                 These are off until you turn one on and save its free key from the site.
               </p>
               <ul className="mt-3 flex flex-col gap-4">
-                {keyedSources.map((s) => (
+                {keyedGroups.map((group) => (
                   <OptionalSource
-                    key={s.id}
-                    source={s}
-                    on={enabledFlagged.has(s.id)}
-                    onToggle={(next) => handleToggleFlagged(s.id, next)}
+                    key={group[0].credentials?.service ?? group[0].id}
+                    sources={group}
+                    on={group.some((s) => enabledFlagged.has(s.id))}
+                    onToggle={(next) => handleToggleFlagged(group.map((s) => s.id), next)}
                     onSaved={reloadSources}
                   />
                 ))}

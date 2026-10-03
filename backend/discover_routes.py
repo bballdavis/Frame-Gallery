@@ -51,7 +51,7 @@ THUMB_HOSTS = {
     "api.smk.dk", "iip.smk.dk", "iip-thumb.smk.dk", "open.smk.dk", "www.smk.dk",
     "upload.wikimedia.org", "thumb.wikimedia.org", "commons.wikimedia.org", "www.louvre.fr",
     "images-assets.nasa.gov", "images.nasa.gov",
-    "ids.si.edu", "americanart.si.edu", "www.cooperhewitt.org",
+    "ids.si.edu", "americanart.si.edu", "www.cooperhewitt.org", "www.si.edu",
     "live.staticflickr.com", "combo.staticflickr.com", "pixabay.com", "cdn.pixabay.com",
     "wallhaven.cc", "th.wallhaven.cc", "w.wallhaven.cc",
     "cdn.donmai.us", "danbooru.donmai.us", "konachan.net", "www.bing.com",
