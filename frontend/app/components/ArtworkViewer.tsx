@@ -56,7 +56,13 @@ export default function ArtworkViewer({ artwork, source, added, onAdd, onClose }
     <Dialog.Root open onOpenChange={(next) => !next && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/90" />
-        <Dialog.Content className="fixed inset-0 z-50 flex flex-col text-white focus:outline-none">
+        <Dialog.Content
+          onOpenAutoFocus={(event) => {
+            // Focus the dialog, not its close button, which would open with a focus ring on it.
+            event.preventDefault();
+            (event.currentTarget as HTMLElement).focus();
+          }}
+          className="fixed inset-0 z-50 flex flex-col text-white focus:outline-none">
           {/* The picture takes everything the bar leaves; clicking the empty space around it closes. */}
           <div
             className="flex min-h-0 flex-1 items-center justify-center p-3 sm:p-6"

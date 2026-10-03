@@ -115,7 +115,13 @@ export default function AddToGalleryDialog({
     <Dialog.Root open={open} onOpenChange={(next) => !next && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-card p-6 text-foreground shadow-xl focus:outline-none">
+        <Dialog.Content
+          onOpenAutoFocus={(event) => {
+            // Focus the dialog, not its close button, which would open with a focus ring on it.
+            event.preventDefault();
+            (event.currentTarget as HTMLElement).focus();
+          }}
+          className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-card p-6 text-foreground shadow-xl focus:outline-none">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <Dialog.Title className="text-lg font-semibold">{heading}</Dialog.Title>

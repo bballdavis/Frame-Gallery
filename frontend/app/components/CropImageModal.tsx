@@ -333,7 +333,7 @@ const CropImageModal: React.FC<CropImageModalProps> = ({ isOpen, imageUrl, filen
             <div className="flex items-center gap-1.5">
               <Tooltip label="Cancel" side="bottom">
                 <Dialog.Close className={toolButton} aria-label="Cancel" disabled={saving}>
-                  <XMarkIcon className="size-5" />
+                  <XMarkIcon weight="regular" className="size-5" />
                 </Dialog.Close>
               </Tooltip>
               <Tooltip label="Apply crop" side="bottom">
@@ -530,7 +530,7 @@ const CropImageModal: React.FC<CropImageModalProps> = ({ isOpen, imageUrl, filen
 
             {/* Size */}
             <div className="order-last flex w-full min-w-40 items-center gap-2 sm:order-none sm:w-auto sm:flex-1">
-              <ZoomOutIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <ZoomOutIcon weight="regular" className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
               <input
                 type="range"
                 min={0}
@@ -542,7 +542,7 @@ const CropImageModal: React.FC<CropImageModalProps> = ({ isOpen, imageUrl, filen
                 aria-label="Zoom"
                 className="h-1.5 w-full cursor-pointer accent-primary"
               />
-              <ZoomInIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <ZoomInIcon weight="regular" className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </div>
 
             <div className="flex items-center gap-0.5">

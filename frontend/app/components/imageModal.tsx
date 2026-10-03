@@ -1,7 +1,11 @@
 import React from "react";
-import { Dialog, Popover } from "radix-ui";
+import { Dialog, Popover, Select } from "radix-ui";
 import {
+  ArrowSquareOut as ExternalLinkIcon,
+  CaretDown as ChevronDownIcon,
+  Check as CheckIcon,
   Crop as CropIcon,
+  Info as InfoIcon,
   FolderSimplePlus as AlbumAddIcon,
   Play as PlayIcon,
   Power as PowerIcon,
@@ -12,7 +16,6 @@ import {
 } from "@phosphor-icons/react";
 import { MATTE_STYLES, MATTE_COLORS, MATTE_STYLE_LABELS, MATTE_COLOR_LABELS, MATTE_SWATCHES } from "../utils/matte";
 import { Tooltip } from "./ui/tooltip";
-import ImageSource from "./ImageSource";
 import MattePreview from "./MattePreview";
 
 export interface TV {
@@ -60,8 +63,78 @@ export interface ImageModalProps {
   assigning: boolean;
 }
 
-const iconButton =
-  "inline-flex size-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50";
+const toolButton =
+  "inline-flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50";
+
+const ONE_SLOT_NOTE = "1-Slot Mode: uploading shows this picture and replaces the artwork already on the TV.";
+
+/** The 1-Slot Mode marker: an info icon that explains itself on hover or focus. */
+function OneSlotInfo() {
+  return (
+    <Tooltip label={ONE_SLOT_NOTE}>
+      <span
+        tabIndex={0}
+        aria-label={ONE_SLOT_NOTE}
+        // Hovering or tapping the icon explains it; it must not also open the list.
+        onPointerDown={(event) => event.stopPropagation()}
+        className="inline-flex shrink-0 rounded-full text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+      >
+        <InfoIcon className="size-4" />
+      </span>
+    </Tooltip>
+  );
+}
+
+/** What the picture is and where it came from, labelled, as Discover shows it. */
+function ImageDetails({ provenance, size }: { provenance?: any; size: { w: number; h: number } | null }) {
+  const fromSource = Boolean(provenance?.source && provenance.source !== "upload");
+  let domain = "";
+  try {
+    domain = provenance?.source_url ? new URL(provenance.source_url).hostname.replace(/^www\./, "") : "";
+  } catch {
+    // No usable page address.
+  }
+  const shape = !size ? "" : size.w / size.h > 1.05 ? "Landscape" : size.w / size.h < 0.95 ? "Portrait" : "Square";
+
+  const rows: [string, React.ReactNode][] = [];
+  if (fromSource) {
+    if (provenance.title) rows.push(["Title", provenance.title]);
+    if (provenance.artist) rows.push(["Artist", provenance.artist]);
+    rows.push([
+      "Source",
+      provenance.source_url ? (
+        <a
+          href={provenance.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-primary underline-offset-2 hover:underline"
+        >
+          {provenance.source_label}
+          {domain && <span className="text-muted-foreground">· {domain}</span>}
+          <ExternalLinkIcon weight="regular" className="size-3.5" aria-hidden="true" />
+        </a>
+      ) : (
+        provenance.source_label
+      ),
+    ]);
+    if (provenance.license) rows.push(["License", provenance.license]);
+  } else if (provenance) {
+    rows.push(["Source", provenance.source === "upload" ? "Uploaded manually" : "Uploaded"]);
+  }
+  if (size) rows.push(["Size", `${size.w} × ${size.h} px · ${shape}`]);
+  if (rows.length === 0) return null;
+
+  return (
+    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 rounded-lg border border-border/70 bg-muted/40 px-3.5 py-3 text-xs">
+      {rows.map(([label, value]) => (
+        <React.Fragment key={label}>
+          <dt className="text-muted-foreground">{label}</dt>
+          <dd className="min-w-0 break-words text-foreground">{value}</dd>
+        </React.Fragment>
+      ))}
+    </dl>
+  );
+}
 
 const ImageModal: React.FC<ImageModalProps> = ({
   isOpen,
@@ -104,6 +177,19 @@ const ImageModal: React.FC<ImageModalProps> = ({
     if (!isOpen) setConfirmingDelete(false);
   }, [isOpen]);
 
+  // The picture's own size, for the details.
+  const [size, setSize] = React.useState<{ w: number; h: number } | null>(null);
+  React.useEffect(() => {
+    if (!isOpen || !imageURL) return;
+    let live = true;
+    const probe = new Image();
+    probe.onload = () => live && setSize({ w: probe.naturalWidth, h: probe.naturalHeight });
+    probe.src = imageURL;
+    return () => {
+      live = false;
+    };
+  }, [isOpen, imageURL]);
+
   const selectedTv = tvs.find((t) => t.ip === selectedTvIp);
   const isOneSlotMode = !!selectedTv?.one_slot_mode;
   const hasTvs = tvs.length > 0;
@@ -114,6 +200,11 @@ const ImageModal: React.FC<ImageModalProps> = ({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs data-[state=open]:animate-in data-[state=open]:fade-in-0" />
         <Dialog.Content
+          onOpenAutoFocus={(event) => {
+            // Focus the dialog, not its close button, which would open with a focus ring on it.
+            event.preventDefault();
+            (event.currentTarget as HTMLElement).focus();
+          }}
           className={
             "fixed z-50 flex flex-col overflow-hidden border border-border bg-card text-card-foreground shadow-2xl focus:outline-none " +
             // Phones: a sheet from the bottom. Larger screens: centred, never taller than the window.
@@ -133,7 +224,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
               </Dialog.Description>
             </div>
             <Dialog.Close className="-mr-1 shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label="Close">
-              <XMarkIcon className="size-5" />
+              <XMarkIcon weight="regular" className="size-5" />
             </Dialog.Close>
           </div>
 
@@ -148,51 +239,47 @@ const ImageModal: React.FC<ImageModalProps> = ({
                   matteColor={matteColor}
                 />
 
-                <div className="flex items-start gap-3">
-                  {isLocalImage && (
-                    <div className="flex shrink-0 gap-2">
-                      <Tooltip label="Crop">
-                        <button type="button" className={iconButton} onClick={onOpenCrop} aria-label="Crop">
-                          <CropIcon className="size-[18px]" />
-                        </button>
-                      </Tooltip>
+                {isLocalImage && (
+                  <div className={`grid gap-2 ${availableAlbums.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}>
+                    <button type="button" className={toolButton} onClick={onOpenCrop}>
+                      <CropIcon className="size-[18px]" />
+                      Crop
+                    </button>
 
-                      {availableAlbums.length > 0 && (
-                        <Popover.Root open={albumsOpen} onOpenChange={setAlbumsOpen}>
-                          <Tooltip label="Add to album">
-                            <Popover.Trigger className={iconButton} aria-label="Add to album" disabled={assigning}>
-                              <AlbumAddIcon className="size-[18px]" />
-                            </Popover.Trigger>
-                          </Tooltip>
-                          <Popover.Portal>
-                            <Popover.Content
-                              align="start"
-                              sideOffset={6}
-                              collisionPadding={12}
-                              className="z-50 max-h-64 w-56 overflow-y-auto rounded-lg border border-border bg-popover p-1.5 text-sm text-popover-foreground shadow-lg focus:outline-none"
-                            >
-                              <p className="px-2 pb-1 pt-0.5 text-xs font-medium text-muted-foreground">Add to album</p>
-                              {availableAlbums.map((album) => (
-                                <button
-                                  key={album.id}
-                                  type="button"
-                                  className="block w-full truncate rounded-md px-2 py-1.5 text-left hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
-                                  onClick={() => {
-                                    onAssignToAlbum(album.name);
-                                    setAlbumsOpen(false);
-                                  }}
-                                >
-                                  {album.name}
-                                </button>
-                              ))}
-                            </Popover.Content>
-                          </Popover.Portal>
-                        </Popover.Root>
-                      )}
-                    </div>
-                  )}
-                  {image?.provenance && <ImageSource provenance={image.provenance} className="min-w-0 pt-0.5" />}
-                </div>
+                    {availableAlbums.length > 0 && (
+                      <Popover.Root open={albumsOpen} onOpenChange={setAlbumsOpen}>
+                        <Popover.Trigger className={toolButton} disabled={assigning}>
+                          <AlbumAddIcon className="size-[18px]" />
+                          {assigning ? "Adding…" : "Add to album"}
+                        </Popover.Trigger>
+                        <Popover.Portal>
+                          <Popover.Content
+                            align="end"
+                            sideOffset={6}
+                            collisionPadding={12}
+                            className="z-50 max-h-64 w-[var(--radix-popover-trigger-width)] min-w-48 overflow-y-auto rounded-lg border border-border bg-popover p-1.5 text-sm text-popover-foreground shadow-lg focus:outline-none"
+                          >
+                            {availableAlbums.map((album) => (
+                              <button
+                                key={album.id}
+                                type="button"
+                                className="block w-full truncate rounded-md px-2 py-1.5 text-left hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
+                                onClick={() => {
+                                  onAssignToAlbum(album.name);
+                                  setAlbumsOpen(false);
+                                }}
+                              >
+                                {album.name}
+                              </button>
+                            ))}
+                          </Popover.Content>
+                        </Popover.Portal>
+                      </Popover.Root>
+                    )}
+                  </div>
+                )}
+
+                <ImageDetails provenance={image?.provenance} size={size} />
               </div>
 
               {/* Sending it to a TV */}
@@ -200,33 +287,51 @@ const ImageModal: React.FC<ImageModalProps> = ({
                 {hasTvs ? (
                   <>
                     <div className="space-y-1.5">
-                      <label htmlFor="image-modal-tv" className="text-xs font-medium text-muted-foreground">
+                      <span id="image-modal-tv" className="text-xs font-medium text-muted-foreground">
                         Frame TV
-                      </label>
-                      <select
-                        id="image-modal-tv"
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/60"
-                        value={selectedTvIp}
-                        onChange={(e) => setSelectedTvIp(e.target.value)}
-                        disabled={tvLoading}
-                      >
-                        <option value="">Select a TV</option>
-                        {tvs.map((tv) => (
-                          <option key={tv.ip} value={tv.ip}>
-                            {tv.name || tv.ip} {tv.one_slot_mode ? "(1-Slot Mode)" : ""}
-                          </option>
-                        ))}
-                      </select>
+                      </span>
+                      <Select.Root value={selectedTvIp || undefined} onValueChange={setSelectedTvIp} disabled={tvLoading}>
+                        <Select.Trigger
+                          aria-labelledby="image-modal-tv"
+                          className="flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-background px-3 text-left text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:opacity-50"
+                        >
+                          <span className="min-w-0 flex-1 truncate">
+                            <Select.Value placeholder="Select a TV" />
+                          </span>
+                          {isOneSlotMode && <OneSlotInfo />}
+                          <Select.Icon>
+                            <ChevronDownIcon weight="regular" className="size-4 text-muted-foreground" />
+                          </Select.Icon>
+                        </Select.Trigger>
+                        <Select.Portal>
+                          <Select.Content
+                            position="popper"
+                            sideOffset={4}
+                            className="z-50 max-h-72 w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-border bg-popover p-1 text-sm text-popover-foreground shadow-lg"
+                          >
+                            <Select.Viewport>
+                              {tvs.map((tv) => (
+                                <Select.Item
+                                  key={tv.ip}
+                                  value={tv.ip}
+                                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 outline-none data-[highlighted]:bg-accent"
+                                >
+                                  <span className="flex w-4 shrink-0 justify-center">
+                                    <Select.ItemIndicator>
+                                      <CheckIcon weight="bold" className="size-3.5" />
+                                    </Select.ItemIndicator>
+                                  </span>
+                                  <span className="min-w-0 flex-1 truncate">
+                                    <Select.ItemText>{tv.name || tv.ip}</Select.ItemText>
+                                  </span>
+                                  {tv.one_slot_mode && <OneSlotInfo />}
+                                </Select.Item>
+                              ))}
+                            </Select.Viewport>
+                          </Select.Content>
+                        </Select.Portal>
+                      </Select.Root>
                     </div>
-
-                    {selectedTvIp && isOneSlotMode && (
-                      <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning-surface p-2.5 text-xs text-warning">
-                        <span className="mt-1 inline-block size-2 shrink-0 animate-pulse rounded-full bg-warning" />
-                        <span>
-                          <strong>1-Slot Mode:</strong> uploading shows this picture and replaces the artwork on the TV.
-                        </span>
-                      </div>
-                    )}
 
                     {/* Matte */}
                     <div className="space-y-2">
@@ -248,11 +353,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
                           </option>
                         ))}
                       </select>
-                      <div
-                        role="radiogroup"
-                        aria-label="Matte color"
-                        className={`grid grid-cols-8 gap-1.5 transition-opacity ${matteStyle === "none" ? "pointer-events-none opacity-40" : ""}`}
-                      >
+                      {matteStyle !== "none" && (
+                      <div role="radiogroup" aria-label="Matte color" className="grid grid-cols-8 gap-1.5">
                         {MATTE_COLORS.map((color) => {
                           const selected = color === matteColor;
                           return (
@@ -262,7 +364,6 @@ const ImageModal: React.FC<ImageModalProps> = ({
                                 role="radio"
                                 aria-checked={selected}
                                 aria-label={MATTE_COLOR_LABELS[color] ?? color}
-                                disabled={matteStyle === "none"}
                                 onClick={() => setMatteColor(color)}
                                 className={
                                   "aspect-square w-full rounded-full border border-black/15 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 dark:border-white/15 " +
@@ -274,6 +375,7 @@ const ImageModal: React.FC<ImageModalProps> = ({
                           );
                         })}
                       </div>
+                      )}
                     </div>
 
                     {/* Actions */}
