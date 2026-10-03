@@ -14,13 +14,18 @@ import { splitMatte } from '~/utils/matte';
 import { Switch } from '~/components/ui/switch';
 import { TvEditModal, type TV } from '~/components/TvEditModal';
 import SourceLogo from '~/components/SourceLogo';
+import SourceOrderDialog from '~/components/SourceOrderDialog';
 import { clearCredentials, fetchSources, saveCredentials, type DiscoverSource } from '~/utils/discoverApi';
 import {
   getCustomizeSources,
   getDisabledSources,
   getEnabledFlaggedSources,
   isOptional,
+  orderSources,
   setCustomizeSources,
+  setSourceOrder,
+  getSourceOrder,
+  visibleSources,
   setDisabledSources,
   setEnabledFlaggedSources,
 } from '~/lib/discoverPrefs';
@@ -191,6 +196,20 @@ export default function Settings() {
 
   const freeSources = discoverSources.filter((s) => !isOptional(s));
   const keyedSources = discoverSources.filter((s) => isOptional(s));
+  // One order for every source in use, across both lists above.
+  const [orderOpen, setOrderOpen] = React.useState(false);
+  const [orderVersion, setOrderVersion] = React.useState(0);
+  const inUse = React.useMemo(
+    () => orderSources(visibleSources(discoverSources)),
+    // The switches live in localStorage, so re-derive when they or the order change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [discoverSources, disabledSources, enabledFlagged, customizeSources, orderVersion]
+  );
+  const saveOrder = (ids: string[]) => {
+    // Sources not shown here (switched off) keep their place, after the ones just ordered.
+    setSourceOrder([...ids, ...getSourceOrder().filter((id) => !ids.includes(id))]);
+    setOrderVersion((n) => n + 1);
+  };
   const reloadSources = () => fetchSources().then(({ sources }) => setDiscoverSources(sources)).catch(() => {});
 
   // Fetch TVs
@@ -607,6 +626,18 @@ export default function Settings() {
               </ul>
             </div>
           )}
+          <div className="mt-4 flex items-center justify-between gap-4 border-t border-border pt-4">
+            <span>
+              <span className="block font-semibold text-foreground">Search order</span>
+              <span className="block text-sm text-muted-foreground">
+                Choose which sources come first in “All sources” results.
+              </span>
+            </span>
+            <Button type="button" variant="outline" onClick={() => setOrderOpen(true)} disabled={inUse.length < 2}>
+              Reorder
+            </Button>
+          </div>
+          <SourceOrderDialog open={orderOpen} sources={inUse} onClose={() => setOrderOpen(false)} onSave={saveOrder} />
         </div>
 
         {/* Provider Settings */}

@@ -44,9 +44,12 @@ export default function BottomTabs() {
           <NavLink
             key={item.id}
             to={item.href}
-            className={({ isActive }) =>
+            // Fetch the page's code on hover or touch, so the click itself has little left to wait for.
+            prefetch="intent"
+            // isPending lights the tab the moment it is clicked, before the page has finished loading.
+            className={({ isActive, isPending }) =>
               `inline-flex flex-col items-center justify-center px-5 h-full group focus-visible:outline-none focus-visible:ring-inset focus-visible:ring-[3px] focus-visible:ring-ring/60 ${
-                isActive ? "bottom-tab-active" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                isActive || isPending ? "bottom-tab-active" : "text-muted-foreground hover:bg-accent hover:text-foreground"
               }`
             }
           >

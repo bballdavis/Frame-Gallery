@@ -20,7 +20,7 @@ function FullImage({ artwork }: { artwork: Artwork }) {
       alt={`${artwork.title}${artwork.artist ? ` by ${artwork.artist}` : ""}`}
       referrerPolicy="no-referrer"
       onError={() => setAttempt((n) => n + 1)}
-      className="max-h-full max-w-full object-contain"
+      className="h-full w-full object-contain"
     />
   );
 }

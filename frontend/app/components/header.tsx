@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import { useLocation } from "react-router";
+import { useLocation, useNavigation } from "react-router";
 import { useTheme } from "next-themes";
 import { Moon as MoonIcon, Sun as SunIcon } from "@phosphor-icons/react";
 
@@ -45,7 +45,9 @@ function ThemeToggle() {
 
 export default function Header() {
   const location = useLocation();
-  const pageName = pageNames[location.pathname] || "Page";
+  const navigation = useNavigation();
+  // While a page is loading, name the one being opened rather than the one being left.
+  const pageName = pageNames[(navigation.location ?? location).pathname] || "Page";
   return (
     <header className="w-[95%] self-center rounded-4xl mt-2 bg-card/95 text-foreground border border-border shadow-[var(--shadow-card)] backdrop-blur-md">
       <div className="flex items-center justify-between px-6 py-3">

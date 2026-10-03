@@ -1,8 +1,21 @@
+import { LinkSimple as LinkIcon } from "@phosphor-icons/react";
 import type { ExploreTile } from "~/lib/explore";
 
 interface ExploreGridProps {
   tiles: ExploreTile[];
   onPick: (tile: ExploreTile) => void;
+  /** Opens the paste-a-link dialog */
+  onPasteLink: () => void;
+}
+
+// Tailwind only generates classes it can see written out, so the spans are looked up, not built.
+const SM_SPAN = ["", "sm:col-span-1", "sm:col-span-2", "sm:col-span-3"];
+const LG_SPAN = ["", "lg:col-span-1", "lg:col-span-2", "lg:col-span-3", "lg:col-span-4"];
+
+/** How many columns the paste tile takes so the last row of `count` tiles (the first double width) ends flush. */
+function fillSpan(count: number, columns: number) {
+  const used = count + (count > 0 ? 1 : 0);
+  return 1 + ((columns - ((used + 1) % columns)) % columns);
 }
 
 /**
@@ -22,7 +35,9 @@ function phoneShape(i: number, count: number) {
  * from tablet width up they fill the page evenly. The first tile is what is in season, and
  * is twice as wide.
  */
-export default function ExploreGrid({ tiles, onPick }: ExploreGridProps) {
+export default function ExploreGrid({ tiles, onPick, onPasteLink }: ExploreGridProps) {
+  // The paste tile is one more chip in the list, and stretches to finish the last row.
+  const pasteClass = `${phoneShape(tiles.length, tiles.length + 1)} ${SM_SPAN[fillSpan(tiles.length, 3)]} ${LG_SPAN[fillSpan(tiles.length, 4)]} sm:h-32`;
   return (
     <section aria-labelledby="explore-heading" className="mb-6">
       <h2 id="explore-heading" className="mb-2 text-sm font-medium text-muted-foreground">
@@ -55,6 +70,19 @@ export default function ExploreGrid({ tiles, onPick }: ExploreGridProps) {
             </li>
           );
         })}
+        <li className={pasteClass}>
+          <button
+            type="button"
+            onClick={onPasteLink}
+            className="group flex size-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border bg-card/50 p-3 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-selection/40 hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <span className="inline-flex size-9 items-center justify-center rounded-full bg-muted transition-colors group-hover:bg-primary/10">
+              <LinkIcon className="size-5" aria-hidden="true" />
+            </span>
+            <span className="text-sm font-medium">Paste a link</span>
+            <span className="text-xs">From any source’s site</span>
+          </button>
+        </li>
       </ul>
     </section>
   );

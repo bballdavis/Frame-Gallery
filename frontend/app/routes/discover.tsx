@@ -8,11 +8,12 @@ import ArtworkViewer from "~/components/ArtworkViewer";
 import DiscoverFilters, { DEFAULT_FILTERS, NO_FILTERS, type Filters } from "~/components/DiscoverFilters";
 import DiscoverHero from "~/components/DiscoverHero";
 import ExploreGrid from "~/components/ExploreGrid";
+import PasteLinkDialog from "~/components/PasteLinkDialog";
 import SourcePicker, { ALL_SOURCES } from "~/components/SourcePicker";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
-import { isOptional, visibleSources } from "~/lib/discoverPrefs";
+import { isOptional, orderSources, visibleSources } from "~/lib/discoverPrefs";
 import { exploreTiles, type ExploreTile } from "~/lib/explore";
 import { createAlbum, fetchAlbums } from "~/utils/galleryApi";
 import {
@@ -75,8 +76,9 @@ export default function Discover() {
   // Optional sources (personal use, or needing a key) stay hidden unless switched on there.
   const sources = useMemo(() => {
     const kept = visibleSources(allSources);
-    return kept.length ? kept : allSources.filter((s) => !isOptional(s));
+    return orderSources(kept.length ? kept : allSources.filter((s) => !isOptional(s)));
   }, [allSources]);
+  const [pasting, setPasting] = useState(false);
   const [season, setSeason] = useState("");
   // Which sources are resting or busy, kept apart so refreshing it never restarts a search.
   const [statuses, setStatuses] = useState<Record<string, SourceStatus>>({});
@@ -583,7 +585,7 @@ export default function Discover() {
 
       {/* Nothing typed: topics to start from. Once searching, they fold into a row of chips. */}
       {inAll && trimmed === "" ? (
-        <ExploreGrid tiles={tiles} onPick={pickTile} />
+        <ExploreGrid tiles={tiles} onPick={pickTile} onPasteLink={() => setPasting(true)} />
       ) : (
         <div className="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label="Suggested searches">
           <span className="mr-0.5 text-sm font-medium text-muted-foreground">Explore:</span>
@@ -710,9 +712,11 @@ export default function Discover() {
         it beyond your own home.
       </p>
 
+      <PasteLinkDialog open={pasting} onClose={() => setPasting(false)} onFound={setViewing} />
+
       <ArtworkViewer
         artwork={viewing}
-        source={viewing ? (sources.find((s) => s.id === viewing.source) ?? null) : null}
+        source={viewing ? (allSources.find((s) => s.id === viewing.source) ?? null) : null}
         added={viewing ? added.has(keyOf(viewing)) : false}
         onAdd={(art) => {
           setViewing(null);
