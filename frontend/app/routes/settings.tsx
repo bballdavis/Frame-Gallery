@@ -9,7 +9,8 @@ import { getBackupUrl, reconcileImages } from '~/utils/galleryApi';
 import { toast } from 'sonner';
 
 import type { ProviderConfig } from '~/utils/providerApi';
-import { CircleNotch as SpinnerIcon, Images as ImagesIcon, Pencil as PencilIcon, Plus as PlusIcon, Sparkle as SparklesIcon } from "@phosphor-icons/react";
+import { CircleNotch as SpinnerIcon, Images as ImagesIcon, Pencil as PencilIcon, Plus as PlusIcon, Sparkle as SparklesIcon, Trash as TrashIcon } from "@phosphor-icons/react";
+import { Tooltip } from '~/components/ui/tooltip';
 import { splitMatte } from '~/utils/matte';
 import { Switch } from '~/components/ui/switch';
 import { TvEditModal, type TV } from '~/components/TvEditModal';
@@ -178,6 +179,8 @@ export default function Settings() {
   const [immichEnabled, setImmichEnabled] = React.useState(false);
   const [providerError, setProviderError] = React.useState("");
   const [providerSaving, setProviderSaving] = React.useState(false);
+  // What the server last stored, so leaving a field unchanged does not save again.
+  const savedImmich = React.useRef("");
 
   // Albums feed the slideshow picker.
   const [albums, setAlbums] = React.useState<{ id: string; name: string }[]>([]);
@@ -270,6 +273,7 @@ export default function Settings() {
         setImmichPort(immich.port);
         setImmichApiKey(immich.api_key || "");
         setImmichEnabled(!!immich.enabled);
+        savedImmich.current = JSON.stringify({ host: immich.host || "", port: immich.port, api_key: immich.api_key || "", enabled: !!immich.enabled });
       }
     } catch (e: any) {
       setProviderError(e.message || 'Failed to fetch providers');
@@ -398,43 +402,36 @@ export default function Settings() {
     }
   };
 
-  // Provider handlers
-  const handleSaveImmich = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Provider handlers. Like the rest of the page, Immich saves as it is changed: the switch
+  // straight away, the fields when you leave one (or press Enter), once host and key are both in.
+  const saveImmich = async (enabled: boolean) => {
+    const config = { host: immichHost.trim(), port: immichPort, api_key: immichApiKey.trim(), enabled };
+    if (!config.host || !config.api_key) return;
+    const snapshot = JSON.stringify(config);
+    if (snapshot === savedImmich.current) return;
     setProviderSaving(true);
     setProviderError("");
     try {
-      await setProvider('immich', {
-        host: immichHost,
-        port: immichPort,
-        api_key: immichApiKey,
-        enabled: immichEnabled,
-      });
-      await fetchProviders();
-      alert("Successfully saved Immich config - Restart Frame Gallery to apply all changes.");
+      await setProvider('immich', config);
+      savedImmich.current = snapshot;
+      toast.success(
+        enabled ? 'Immich settings saved. Restart Frame Gallery to apply them.' : 'Immich turned off. Restart Frame Gallery to apply it.',
+        { position: 'top-center' },
+      );
     } catch (e: any) {
-      setProviderError(e.message || 'Failed to save Immich config');
+      setProviderError(e.message || 'Failed to save Immich settings');
     } finally {
       setProviderSaving(false);
     }
   };
 
-  // Turning it off has no Save button to go with it, so the change is stored straight away.
   const handleToggleImmich = async (enabled: boolean) => {
     setImmichEnabled(enabled);
-    if (enabled || !immichHost || !immichApiKey) return;
-    setProviderError("");
-    try {
-      await setProvider('immich', { host: immichHost, port: immichPort, api_key: immichApiKey, enabled: false });
-      await fetchProviders();
-      toast.success('Immich turned off. Restart Frame Gallery to apply it.', { position: 'top-center' });
-    } catch (e: any) {
-      setImmichEnabled(true);
-      setProviderError(e.message || 'Failed to turn Immich off');
-    }
+    await saveImmich(enabled);
   };
 
   const handleDeleteImmich = async () => {
+    if (!window.confirm('Clear the Immich settings? The host, port and API key are removed from this server.')) return;
     setProviderSaving(true);
     setProviderError("");
     try {
@@ -443,7 +440,9 @@ export default function Settings() {
       setImmichPort(undefined);
       setImmichApiKey("");
       setImmichEnabled(false);
+      savedImmich.current = "";
       await fetchProviders();
+      toast.success('Immich settings cleared.', { position: 'top-center' });
     } catch (e: any) {
       setProviderError(e.message || 'Failed to delete Immich config');
     } finally {
@@ -682,7 +681,13 @@ export default function Settings() {
         {/* Provider Settings */}
         <div className="bg-card rounded-2xl border border-border p-5">
           <h2 className="text-lg font-semibold mb-4 text-foreground">External Providers</h2>
-          <form onSubmit={handleSaveImmich} className="flex flex-col gap-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              saveImmich(immichEnabled);
+            }}
+            className="flex flex-col gap-4"
+          >
             <label className="flex items-center justify-between gap-4">
               <span>
                 <span className="block font-semibold text-foreground">Immich</span>
@@ -690,42 +695,50 @@ export default function Settings() {
               </span>
               <Switch checked={immichEnabled} onCheckedChange={handleToggleImmich} aria-label="Enable Immich" />
             </label>
-            {/* The fields and their buttons belong to the switch: they show and hide together. */}
+            {/* The fields belong to the switch: they show and hide together. */}
             {immichEnabled && (
-              <div className="flex flex-col gap-3 border-t border-border pt-4">
-                <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
+              <div className="flex items-center gap-2 border-t border-border pt-4">
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                  <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
+                    <Input
+                      type="text"
+                      value={immichHost}
+                      onChange={e => setImmichHost(e.target.value)}
+                      onBlur={() => saveImmich(immichEnabled)}
+                      placeholder="Host (e.g. immich.example.com)"
+                      aria-label="Immich host"
+                    />
+                    <Input
+                      type="number"
+                      value={immichPort === undefined ? '' : immichPort}
+                      onChange={e => setImmichPort(e.target.value ? parseInt(e.target.value) : undefined)}
+                      onBlur={() => saveImmich(immichEnabled)}
+                      placeholder="Port (443)"
+                      aria-label="Immich port"
+                    />
+                  </div>
                   <Input
                     type="text"
-                    value={immichHost}
-                    onChange={e => setImmichHost(e.target.value)}
-                    placeholder="Host (e.g. immich.example.com)"
-                    aria-label="Immich host"
-                    required
+                    value={immichApiKey}
+                    onChange={e => setImmichApiKey(e.target.value)}
+                    onBlur={() => saveImmich(immichEnabled)}
+                    placeholder="API key"
+                    aria-label="Immich API key"
                   />
-                  <Input
-                    type="number"
-                    value={immichPort === undefined ? '' : immichPort}
-                    onChange={e => setImmichPort(e.target.value ? parseInt(e.target.value) : undefined)}
-                    placeholder="Port (443)"
-                    aria-label="Immich port"
-                  />
+                  {/* Enter in a field saves too; this hidden button is what makes it submit. */}
+                  <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
                 </div>
-                <Input
-                  type="text"
-                  value={immichApiKey}
-                  onChange={e => setImmichApiKey(e.target.value)}
-                  placeholder="API key"
-                  aria-label="Immich API key"
-                  required
-                />
-                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <Button type="button" variant="outline" onClick={handleDeleteImmich} disabled={providerSaving}>
-                    Delete config
-                  </Button>
-                  <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary-hover" disabled={providerSaving}>
-                    {providerSaving ? 'Saving…' : 'Save config'}
-                  </Button>
-                </div>
+                <Tooltip label="Clear Immich settings">
+                  <button
+                    type="button"
+                    onClick={handleDeleteImmich}
+                    disabled={providerSaving || (!immichHost && !immichApiKey && immichPort === undefined)}
+                    aria-label="Clear Immich settings"
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-danger-surface hover:text-destructive focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-40"
+                  >
+                    {providerSaving ? <SpinnerIcon className="size-5 animate-spin" aria-hidden="true" /> : <TrashIcon weight="regular" className="size-5" aria-hidden="true" />}
+                  </button>
+                </Tooltip>
               </div>
             )}
             {providerError && <div className="text-destructive text-sm">{providerError}</div>}
