@@ -1,6 +1,6 @@
 {
-  "name": "frametv-art-gallery",
-  "productName": "Frame TV Art Gallery Manager",
+  "name": "frame-gallery",
+  "productName": "Frame Gallery",
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@11.1.0",
@@ -52,7 +52,7 @@
     "vite-tsconfig-paths": "^6.1.1"
   },
   "build": {
-    "appId": "com.mrtncode.frametv-art-gallery",
+    "appId": "com.bballdavis.frame-gallery",
     "files": [
       "main.js",
       "build/client/**/*"

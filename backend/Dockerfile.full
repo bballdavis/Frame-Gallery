@@ -2,7 +2,7 @@
 # plain checkout (for example by Komodo) without a separate `pnpm build` step.
 # backend/Dockerfile is the upstream version, which expects frontend/build/client to exist
 # already because CI builds it first. Build context is the repository root:
-#   docker build -f backend/Dockerfile.full -t frametv-art-gallery .
+#   docker build -f backend/Dockerfile.full -t frame-gallery .
 
 FROM node:24-slim AS frontend
 
