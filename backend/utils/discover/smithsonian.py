@@ -176,11 +176,11 @@ class SmithsonianCollection:
 
 saam = SmithsonianCollection(
     id="saam",
-    name="Smithsonian American Art Museum",
+    name="Modern American art",
     short_name="the Smithsonian American Art Museum",
     tagline="20th-century and contemporary American art in the public domain, from the Smithsonian",
     unit="SAAM",
-    icon_url="https://americanart.si.edu/themes/custom/azalea/dist/media/images/app/Icon-76-2x.png",
+    icon_url="https://americanart.si.edu/favicon.ico",
     site_url="https://americanart.si.edu/art",
     default_query="abstract",
     default_shape="any",
@@ -188,11 +188,11 @@ saam = SmithsonianCollection(
 
 cooper_hewitt = SmithsonianCollection(
     id="cooperhewitt",
-    name="Cooper Hewitt Design Museum",
+    name="Design & posters",
     short_name="Cooper Hewitt",
     tagline="Posters, graphic design and illustration from Cooper Hewitt, the Smithsonian design museum",
     unit="CHNDM",
-    icon_url="https://www.cooperhewitt.org/wp-content/themes/cooperhewitt/favicon.ico",
+    icon_url="https://www.cooperhewitt.org/favicon.ico",
     site_url="https://collection.cooperhewitt.org/",
     default_query="poster",
     default_shape="any",
