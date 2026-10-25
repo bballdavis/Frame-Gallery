@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowUpRight as ArrowUpRightIcon, CaretLeft as ChevronLeftIcon, CaretRight as ChevronRightIcon, Pause as PauseIcon, Play as PlayIcon, Plus as PlusIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
@@ -44,12 +44,14 @@ interface DiscoverHeroProps {
   sources: DiscoverSource[];
   /** Search has the focus, so the hero scrolls out of the way */
   collapsed: boolean;
+  /** Fold at once, without the animation: a tap on the search box, before the keyboard opens */
+  instant?: boolean;
   onAdd: (artwork: Artwork) => void;
   onView: (artwork: Artwork) => void;
   onBrowse: (artwork: Artwork) => void;
 }
 
-export default function DiscoverHero({ items, sources, collapsed, onAdd, onView, onBrowse }: DiscoverHeroProps) {
+export default function DiscoverHero({ items, sources, collapsed, instant = false, onAdd, onView, onBrowse }: DiscoverHeroProps) {
   const [index, setIndex] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
@@ -78,24 +80,49 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onView,
   // scrolled to make room for the keyboard, that carries the bar off the top of the screen,
   // so scroll back by as much as the hero shrinks: the bar stays put. (Browsers' scroll
   // anchoring does this, but iOS Safari has none, and the Discover page turns it off.)
+  //
+  // A tap folds it at once instead, before the input takes the focus: iOS works out its own
+  // scroll for the keyboard and animates to it, which undoes corrections made while the hero
+  // is still shrinking. With the layout already settled, there is nothing to correct.
   const shell = useRef<HTMLDivElement>(null);
   const folding = useRef(collapsed);
   folding.current = collapsed;
+  // The hero's height (with its margin) and the page's scroll, as last seen.
+  const seen = useRef({ space: 0, scrollY: 0 });
   const shown = items === null || items.length > 0;
+  const space = () => {
+    const element = shell.current;
+    return element ? element.getBoundingClientRect().height + parseFloat(getComputedStyle(element).marginBottom || "0") : 0;
+  };
   useEffect(() => {
     const element = shell.current;
     if (!element || typeof ResizeObserver === "undefined") return;
-    const space = () => element.getBoundingClientRect().height + parseFloat(getComputedStyle(element).marginBottom || "0");
-    let last = space();
+    seen.current = { space: space(), scrollY: window.scrollY };
+    const onScroll = () => {
+      seen.current.scrollY = window.scrollY;
+    };
     const observer = new ResizeObserver(() => {
       const now = space();
-      const shrunk = last - now;
-      last = now;
+      const shrunk = seen.current.space - now;
       if (folding.current && shrunk > 0 && window.scrollY > 0) window.scrollBy(0, -shrunk);
+      seen.current = { space: now, scrollY: window.scrollY };
     });
     observer.observe(element);
-    return () => observer.disconnect();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, [shown]);
+  useLayoutEffect(() => {
+    if (!collapsed || !instant || !shell.current) return;
+    // Measured from the scroll before the fold, so a browser that already pulled the page
+    // up (a short page cannot stay scrolled past its new end) is not corrected twice.
+    const now = space();
+    const shrunk = seen.current.space - now;
+    if (shrunk > 0) window.scrollTo(0, Math.max(0, seen.current.scrollY - shrunk));
+    seen.current = { space: now, scrollY: window.scrollY };
+  }, [collapsed, instant]);
 
   if (!shown) return null;
 
@@ -106,7 +133,9 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onView,
       ref={shell}
       // select-none: when the hero unfolds under the pointer at the end of a click, the browser
       // can read it as a drag and highlight the whole thing blue.
-      className={`grid select-none transition-[grid-template-rows,opacity,margin] duration-500 ease-out motion-reduce:transition-none ${
+      className={`grid select-none ${
+        instant ? "" : "transition-[grid-template-rows,opacity,margin] duration-500 ease-out motion-reduce:transition-none"
+      } ${
         collapsed ? "mb-0 grid-rows-[0fr] opacity-0" : "mb-6 grid-rows-[1fr] opacity-100"
       }`}
       inert={collapsed}

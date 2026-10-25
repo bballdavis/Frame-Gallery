@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { toast } from "sonner";
 import { MagnifyingGlass as MagnifyingGlassIcon, XCircle as XCircleIcon } from "@phosphor-icons/react";
 import AddToGalleryDialog, { NEW_ALBUM, type AddChoice } from "~/components/AddToGalleryDialog";
@@ -95,6 +96,9 @@ export default function Discover() {
   // posters) starts without the "wide" filter rather than looking empty.
   const [filtersTouched, setFiltersTouched] = useState(false);
   const [focused, setFocused] = useState(false);
+  // A tap on the search box folds the hero at once, before the phone scrolls for its keyboard.
+  const [foldNow, setFoldNow] = useState(false);
+  const lastPointer = useRef("");
   const [popoversOpen, setPopoversOpen] = useState(0);
 
   const [highlights, setHighlights] = useState<Artwork[] | null>(null);
@@ -166,7 +170,7 @@ export default function Discover() {
     setFiltersTouched(false);
     setFilters(DEFAULT_FILTERS);
   };
-  const heroCollapsed = !inAll || focused || trimmed !== "" || popoversOpen > 0;
+  const heroCollapsed = !inAll || focused || foldNow || trimmed !== "" || popoversOpen > 0;
   const popoverToggled = (open: boolean) => setPopoversOpen((n) => Math.max(0, n + (open ? 1 : -1)));
 
   // --- Loading the sources, highlights and albums -----------------------------
@@ -573,6 +577,7 @@ export default function Discover() {
         items={highlights}
         sources={sources}
         collapsed={heroCollapsed}
+        instant={foldNow}
         onAdd={openAdd}
         onView={setViewing}
         onBrowse={findAtSource}
@@ -610,8 +615,28 @@ export default function Discover() {
                 setTheme("");
                 setQueryInput(e.target.value);
               }}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
+              onPointerDown={(e) => {
+                lastPointer.current = e.pointerType;
+              }}
+              onFocus={() => {
+                // Touch only: a mouse has no keyboard to make room for, so it keeps the animation.
+                // Done as the focus arrives (the tap has already chosen what it hit), and
+                // synchronously, so the layout is settled before the phone scrolls for the keyboard.
+                const touch = lastPointer.current !== "" && lastPointer.current !== "mouse";
+                lastPointer.current = "";
+                if (touch && !heroCollapsed) {
+                  flushSync(() => {
+                    setFoldNow(true);
+                    setFocused(true);
+                  });
+                } else {
+                  setFocused(true);
+                }
+              }}
+              onBlur={() => {
+                setFocused(false);
+                setFoldNow(false);
+              }}
               placeholder={searchPlaceholder}
               aria-label="Search for art"
               className="h-full rounded-l-none rounded-r-md border-0 bg-transparent pl-9 pr-9 text-base shadow-none focus-visible:ring-0 dark:bg-transparent [&::-webkit-search-cancel-button]:hidden"
