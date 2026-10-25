@@ -38,7 +38,10 @@ def cached_search(source, query, page, paintings_only):
     """(raw page, whether it came from the cache). Only successful searches are kept."""
     ttl = getattr(source, "search_cache_ttl", SEARCH_TTL_SECONDS)
     cache = DiskCache("search", ttl)
-    key = f"{source.id}|{(query or '').strip().lower()}|{page}|{int(bool(paintings_only))}"
+    # A source can name what its searches depend on (a Commons category), so changing it
+    # is not answered from the old cache for the rest of the day.
+    scope = getattr(source, "search_scope", "")
+    key = f"{source.id}|{scope}|{(query or '').strip().lower()}|{page}|{int(bool(paintings_only))}"
     hit = cache.get(key)
     if hit is not None:
         return hit, True

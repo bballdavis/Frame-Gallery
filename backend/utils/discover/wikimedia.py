@@ -144,6 +144,10 @@ class CommonsCollection:
     _default_query = "landscape"
 
     @property
+    def search_scope(self):
+        return f"{self.category or ''}|{self.keywords}"
+
+    @property
     def theme_style(self):
         # Fixed keywords are required words, which would turn a theme's OR into "optional".
         return "first" if self.keywords else "or"
@@ -407,8 +411,11 @@ moma = CommonsCollection(
     short_name="MoMA",
     tagline="MoMA paintings in the public domain, high-resolution scans via Wikimedia Commons",
     icon_url="https://www.moma.org/favicon.ico",
-    category="Paintings in the Museum of Modern Art (New York City)",
-    default_query="landscape",
+    # Commons' name; "... (New York City)" is Wikipedia's category for articles, not files.
+    category="Paintings in the Museum of Modern Art",
+    # MoMA has few landscapes. Commons reads OR as "either", and most painting pages say
+    # what they are made of, so this opens on the whole collection.
+    default_query="painting OR canvas",
     min_width=2500,
     trust_artist_field=False,
 )

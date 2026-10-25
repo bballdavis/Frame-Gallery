@@ -438,7 +438,7 @@ def test_the_nga_yale_and_moma_collections_search_their_own_commons_category(net
     nga_search, yale_search, moma_search = (c["params"]["gsrsearch"] for c in net.calls)
     assert nga_search.startswith('deepcategory:"Paintings in the National Gallery of Art (Washington, D.C.)" monet')
     assert yale_search.startswith('deepcategory:"Paintings in the Yale Center for British Art" landscape')
-    assert moma_search.startswith('deepcategory:"Paintings in the Museum of Modern Art (New York City)" van gogh')
+    assert moma_search.startswith('deepcategory:"Paintings in the Museum of Modern Art" van gogh')
 
 
 def test_deviantart_leaves_out_pictures_under_the_floor_for_unverified_sources(net):

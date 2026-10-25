@@ -490,6 +490,15 @@ def test_a_repeated_search_is_served_from_the_cache(client, fake):
     assert first["cached"] is False and second["cached"] is True
 
 
+def test_a_source_whose_scope_changed_is_not_served_its_old_cache(client, fake, monkeypatch):
+    monkeypatch.setattr(fake, "search_scope", "Old category", raising=False)
+    search(client, q="monet")
+    monkeypatch.setattr(fake, "search_scope", "New category", raising=False)
+    search(client, q="monet")
+
+    assert len(fake.searches) == 2
+
+
 def test_changing_a_filter_reuses_the_cached_page(client, fake):
     fake.results = [shaped_item("wide", 1.7), shaped_item("tall", 0.7)]
 
