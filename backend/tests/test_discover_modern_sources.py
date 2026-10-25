@@ -20,7 +20,7 @@ from utils.discover.mastodon import mastodon
 from utils.discover.pixabay import pixabay
 from utils.discover.smithsonian import cooper_hewitt, saam
 from utils.discover.wallhaven import wallhaven
-from utils.discover.wikimedia import illustrations, modern, nga, popart, ukiyoe, yale
+from utils.discover.wikimedia import illustrations, moma, modern, nga, popart, ukiyoe, yale
 
 
 @pytest.fixture
@@ -428,15 +428,17 @@ def test_mastodon_download_is_the_original_picture_of_that_post(net):
 # --- Museums that donated their images to Commons -------------------------------------------
 
 
-def test_the_nga_and_yale_collections_search_their_own_commons_category(net):
+def test_the_nga_yale_and_moma_collections_search_their_own_commons_category(net):
     net.add("w/api.php", FakeResponse({"query": {"pages": {}}}))
 
     nga.search("monet", 1, True, "any")
     yale.search("", 1, True, "any")
+    moma.search("van gogh", 1, True, "any")
 
-    nga_search, yale_search = (c["params"]["gsrsearch"] for c in net.calls)
+    nga_search, yale_search, moma_search = (c["params"]["gsrsearch"] for c in net.calls)
     assert nga_search.startswith('deepcategory:"Paintings in the National Gallery of Art (Washington, D.C.)" monet')
     assert yale_search.startswith('deepcategory:"Paintings in the Yale Center for British Art" landscape')
+    assert moma_search.startswith('deepcategory:"Paintings in the Museum of Modern Art (New York City)" van gogh')
 
 
 def test_deviantart_leaves_out_pictures_under_the_floor_for_unverified_sources(net):

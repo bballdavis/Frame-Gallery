@@ -18,6 +18,7 @@ Most sources need no key or account. The ones that do take a free key, entered u
 | [The Getty](https://www.getty.edu/art/collection/) | Public domain (CC0) | Paintings, drawings and photographs. Found through the museum's open SPARQL endpoint and downloaded from its image server, scaled to the TV. |
 | [National Gallery of Art](https://www.nga.gov/open-access-images.html) | Public domain | Through Wikimedia Commons, where the museum donated its open-access paintings. It has no search API of its own. |
 | [Yale Center for British Art](https://britishart.yale.edu/) | Public domain | Through Wikimedia Commons, for the same reason. |
+| [Museum of Modern Art](https://commons.wikimedia.org/wiki/Category:Paintings_in_the_Museum_of_Modern_Art_(New_York_City)) | Public domain | Through Wikimedia Commons. MoMA's own API is for staff and partners, and most of its collection is still under copyright, so this covers its older paintings only. |
 | [The Louvre](https://commons.wikimedia.org/wiki/Category:Paintings_in_the_Louvre) | Public domain | Louvre paintings in high-resolution scans, through Wikimedia Commons. |
 | [Museums of the world](https://commons.wikimedia.org/wiki/Category:Google_Art_Project_works_by_artist) | Public domain | Google Art Project scans from hundreds of museums, through Wikimedia Commons. |
 | [Smithsonian American Art Museum](https://americanart.si.edu/art) | Public domain (CC0) | Full resolution. **Needs a free [api.data.gov key](https://api.data.gov/signup/).** |

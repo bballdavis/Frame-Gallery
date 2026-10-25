@@ -399,6 +399,20 @@ yale = CommonsCollection(
     trust_artist_field=False,
 )
 
+# MoMA's own API is for staff and partners, and its open data has no images, so only
+# the paintings old enough to be public domain, through Commons.
+moma = CommonsCollection(
+    id="moma",
+    name="Museum of Modern Art",
+    short_name="MoMA",
+    tagline="MoMA paintings in the public domain, high-resolution scans via Wikimedia Commons",
+    icon_url="https://www.moma.org/favicon.ico",
+    category="Paintings in the Museum of Modern Art (New York City)",
+    default_query="landscape",
+    min_width=2500,
+    trust_artist_field=False,
+)
+
 ukiyoe = CommonsCollection(
     id="ukiyoe",
     name="Japanese woodblock prints",

@@ -29,7 +29,7 @@ MOODS = [
 ]
 # The Met is left out: it does not list image sizes, and it is the costly source to ask.
 # Only sources with a clear license go in the hero: never the flagged personal-use ones.
-HERO_SOURCES = ("reframed", "artic", "cleveland", "smk", "louvre", "worldmuseums", "saam", "modernart", "getty", "nga", "yale")
+HERO_SOURCES = ("reframed", "artic", "cleveland", "smk", "louvre", "worldmuseums", "saam", "modernart", "getty", "nga", "yale", "moma")
 PER_SOURCE = 2
 MAX_SLIDES = 12
 
@@ -72,7 +72,7 @@ def hero_url(art):
         return re.sub(r"/\d+px-", "/1280px-", url)
     if source == "getty":
         return url.replace("/full/480,/", "/full/1600,/")
-    if source in ("nga", "yale"):
+    if source in ("nga", "yale", "moma"):
         return re.sub(r"/\d+px-", "/1280px-", url)
     if source in ("saam", "cooperhewitt"):
         return url.replace("&max=480", "&max=1600")
