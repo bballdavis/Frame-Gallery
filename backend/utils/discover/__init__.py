@@ -22,13 +22,13 @@ from .reframed import reframed
 from .smithsonian import cooper_hewitt, saam
 from .smk import smk
 from .wallhaven import wallhaven
-from .wikimedia import holidays, illustrations, louvre, modern, nga, popart, posters, ukiyoe, world_museums, yale
+from .wikimedia import holidays, illustrations, louvre, moma, modern, nga, popart, posters, ukiyoe, world_museums, yale
 
 # Reframed first: its files are already 3840x2160.
 SOURCES = {
     source.id: source
     for source in (
-        reframed, artic, met, cleveland, smk, getty, nga, yale, louvre, world_museums,
+        reframed, artic, met, cleveland, smk, getty, nga, yale, moma, louvre, world_museums,
         # Modern, pop and illustrated work.
         modern, popart, saam, cooper_hewitt, illustrations, pixabay, flickr, ukiyoe,
         holidays, posters, nasa,
