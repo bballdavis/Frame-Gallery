@@ -209,6 +209,40 @@ def test_met_reuses_cached_objects(net):
     assert len(object_calls) == 1  # the second search came from the cache
 
 
+def test_met_pages_look_up_a_small_batch_from_a_shared_search_window(net):
+    objects = {i: met_object(i) for i in range(1, 101)}
+    met_routes(net, objects, ids=list(range(1, 49)), total=100)
+
+    first = met.search("skeletons", 1, paintings_only=False, shape="any")
+    third = met.search("skeletons", 3, paintings_only=False, shape="any")
+
+    searches = [call for call in net.calls if "v1.1/search" in call["url"]]
+    lookups = [call for call in net.calls if "v1/objects/" in call["url"]]
+    assert [s["params"]["offset"] for s in searches] == [0]  # page 3 reuses the cached window
+    assert len(lookups) == 32
+    assert [item["id"] for item in first["results"]] == [str(i) for i in range(1, 17)]
+    assert [item["id"] for item in third["results"]] == [str(i) for i in range(33, 49)]
+    assert third["has_more"] is True
+
+
+def test_met_page_four_asks_for_the_next_search_window(net):
+    met_routes(net, {i: met_object(i) for i in range(49, 65)}, ids=list(range(49, 97)), total=100)
+
+    page = met.search("skeletons", 4, paintings_only=False, shape="any")
+
+    assert net.calls[0]["params"]["offset"] == 48
+    assert [item["id"] for item in page["results"]] == [str(i) for i in range(49, 65)]
+
+
+def test_met_never_looks_up_every_hit_if_the_api_ignores_the_limit(net):
+    met_routes(net, {i: met_object(i) for i in range(1, 501)}, ids=list(range(1, 501)), total=500)
+
+    page = met.search("skeletons", 2, paintings_only=False, shape="any")
+
+    assert len([call for call in net.calls if "v1/objects/" in call["url"]]) == 16
+    assert [item["id"] for item in page["results"]] == [str(i) for i in range(17, 33)]
+
+
 def test_met_blocking_us_is_reported_not_swallowed(net):
     net.add("v1.1/search", FakeResponse({"total": 1, "objectIDs": [1]}))
     net.add("v1/objects/", FakeResponse(status=403))

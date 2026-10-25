@@ -7,6 +7,10 @@ Two quirks shape this module:
   looks at a window of raw hits and keeps the open-access ones.
 * The Met's firewall blocks clients that burst, even below its documented 80 requests
   a second. Object lookups run three at a time and are cached on disk for a week.
+
+Search answers with ids only, so every hit costs a lookup. A page looks up a small batch
+(``LOOKUP_BATCH``) so a search shown beside the other sources stays cheap, and one search
+call (``SEARCH_WINDOW`` ids, cached for an hour) serves several pages.
 """
 
 import logging
@@ -26,7 +30,8 @@ from .common import (
 log = logging.getLogger(__name__)
 
 API = "https://collectionapi.metmuseum.org/public/collection"
-RAW_WINDOW = 48
+SEARCH_WINDOW = 48
+LOOKUP_BATCH = 16
 _PAGE_URL = re.compile(r"^/art/collection/search/(\d+)$")
 
 
@@ -99,14 +104,21 @@ class Met:
         )
 
     def search(self, query, page, paintings_only, shape):
-        params = {"q": query or self.default_query, "limit": RAW_WINDOW, "offset": (page - 1) * RAW_WINDOW}
+        start = (page - 1) * LOOKUP_BATCH
+        block = start - start % SEARCH_WINDOW
+        params = {"q": query or self.default_query, "limit": SEARCH_WINDOW, "offset": block}
         if paintings_only:
             params["medium"] = "Paintings"
         cache_key = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
         data = self.searches.memo(
             cache_key, lambda: http_get(f"{API}/v1.1/search", params=params).json()
         )
-        ids = data.get("objectIDs") or []
+        found = data.get("objectIDs") or []
+        total = data.get("total") or 0
+        # Should the API ever ignore limit and offset, it sends every hit; slice those
+        # from the start rather than looking them all up.
+        first = start if len(found) > SEARCH_WINDOW and len(found) >= total else start - block
+        ids = found[first:first + LOOKUP_BATCH]
 
         def load(object_id):
             try:
@@ -124,7 +136,7 @@ class Met:
             "results": items,
             "page": page,
             "hidden": hidden,
-            "has_more": params["offset"] + len(ids) < (data.get("total") or 0),
+            "has_more": start + len(ids) < total,
             "total": None,
         }
 

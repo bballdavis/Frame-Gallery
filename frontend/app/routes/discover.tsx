@@ -35,6 +35,8 @@ const QUICK_PICKS = ["Landscape", "Seascape", "Winter", "Flowers", "Mountains", 
 // few pages until there is something to look at.
 const WANT_AT_LEAST = 8;
 const MAX_PAGES_PER_LOAD = 4;
+// A heavy source (the Met) pays a lookup per work, so one load stays well inside its budget.
+const HEAVY_MAX_PAGES_PER_LOAD = 3;
 // Searching all sources shows a taste of each.
 const ALL_PER_SOURCE = 6;
 const DEFAULT_DELAY_MS = 350;
@@ -100,6 +102,8 @@ export default function Discover() {
   const [lastPage, setLastPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [hidden, setHidden] = useState(0);
+  // Seconds until the source can be asked again, when it ran out of budget partway through.
+  const [resting, setResting] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
@@ -139,6 +143,12 @@ export default function Discover() {
     (sourceId: string) =>
       filtersTouched ? filters.shape : (sources.find((s) => s.id === sourceId)?.default_shape ?? filters.shape),
     [filters.shape, filtersTouched, sources]
+  );
+  // "Paintings only" suits browsing, but a typed search is after something in particular,
+  // whatever it is made of, so it starts with prints and drawings included.
+  const paintingsFor = useCallback(
+    (q: string) => (filtersTouched || !q ? filters.paintings : false),
+    [filters.paintings, filtersTouched]
   );
   const changeFilters = (next: Filters) => {
     setFiltersTouched(true);
@@ -200,24 +210,47 @@ export default function Discover() {
       let hiddenCount = 0;
       let more = true;
       let page = firstPage;
-      for (let i = 0; i < MAX_PAGES_PER_LOAD && more && found.length < WANT_AT_LEAST; i++) {
-        const data = await searchArt({
-          source: src,
-          q,
-          page,
-          shape: shapeFor(src),
-          paintings: filters.paintings,
-          sharp: filters.sharp,
-        });
+      let restFor = 0;
+      const heavy = sources.find((s) => s.id === src)?.weight === "heavy";
+      const maxPages = heavy ? HEAVY_MAX_PAGES_PER_LOAD : MAX_PAGES_PER_LOAD;
+      for (let i = 0; i < maxPages && more && found.length < WANT_AT_LEAST; i++) {
+        let data;
+        try {
+          data = await searchArt({
+            source: src,
+            q,
+            page,
+            shape: shapeFor(src),
+            paintings: paintingsFor(q),
+            sharp: filters.sharp,
+          });
+        } catch (e) {
+          // Out of budget partway: keep what was found, and "Load more" carries on later.
+          if (i > 0 && e instanceof DiscoverApiError && e.retryAfter) {
+            restFor = e.retryAfter;
+            break;
+          }
+          throw e;
+        }
         if (token !== latestSearch.current) return null;
         found = found.concat(data.results);
         hiddenCount += data.hidden;
         more = data.has_more;
         page += 1;
       }
-      return { found, hiddenCount, more, lastPage: page - 1 };
+      return { found, hiddenCount, more, lastPage: page - 1, restFor };
     },
-    [filters, shapeFor]
+    [filters.sharp, shapeFor, paintingsFor, sources]
+  );
+
+  const noteResting = useCallback(
+    (src: string, seconds: number) => {
+      setResting(seconds);
+      if (seconds) {
+        setStatuses((current) => ({ ...current, [src]: { state: "busy", retry_after: seconds, used: 0, max: 0 } }));
+      }
+    },
+    []
   );
 
   useEffect(() => {
@@ -226,6 +259,7 @@ export default function Discover() {
     setLoading(true);
     setError("");
     setResults([]);
+    setResting(0);
     collect(scope, query, 1, token)
       .then((outcome) => {
         if (!outcome) return;
@@ -233,6 +267,7 @@ export default function Discover() {
         setHidden(outcome.hiddenCount);
         setHasMore(outcome.more);
         setLastPage(outcome.lastPage);
+        noteResting(scope, outcome.restFor);
       })
       .catch((e) => {
         if (token !== latestSearch.current) return;
@@ -245,11 +280,12 @@ export default function Discover() {
         setError(e.message || "Search failed");
       })
       .finally(() => token === latestSearch.current && setLoading(false));
-  }, [scope, inAll, query, collect]);
+  }, [scope, inAll, query, collect, noteResting]);
 
   async function loadMore() {
     const token = latestSearch.current;
     setLoadingMore(true);
+    setResting(0);
     try {
       const outcome = await collect(scope, query, lastPage + 1, token);
       if (!outcome) return;
@@ -260,6 +296,7 @@ export default function Discover() {
       setHidden((n) => n + outcome.hiddenCount);
       setHasMore(outcome.more);
       setLastPage(outcome.lastPage);
+      noteResting(scope, outcome.restFor);
     } catch (e: any) {
       toast.error(e.message || "Could not load more", { position: "top-center" });
     } finally {
@@ -282,7 +319,7 @@ export default function Discover() {
           q,
           page: 1,
           shape: shapeFor(s.id),
-          paintings: filters.paintings,
+          paintings: paintingsFor(q),
           sharp: filters.sharp,
           limit: ALL_PER_SOURCE,
         });
@@ -315,7 +352,7 @@ export default function Discover() {
         }));
       }
     },
-    [filters, shapeFor]
+    [filters.sharp, shapeFor, paintingsFor]
   );
 
   useEffect(() => {
@@ -505,8 +542,15 @@ export default function Discover() {
 
   const dialogSource = dialogArt ? (sources.find((s) => s.id === dialogArt.source) ?? null) : null;
   const defaultFraming: Framing = remembered(FRAMING_KEY) === "whole" ? "whole" : "fill";
-  const shownFilters: Filters = { ...filters, shape: source ? shapeFor(source.id) : filters.shape };
-  const filtersNarrow = shownFilters.shape !== "any" || filters.sharp || Boolean(source?.has_type_filter && filters.paintings);
+  const shownFilters: Filters = {
+    ...filters,
+    shape: source ? shapeFor(source.id) : filters.shape,
+    paintings: paintingsFor(inAll ? trimmed : query),
+  };
+  const filtersNarrow =
+    shownFilters.shape !== "any" || filters.sharp || Boolean(source?.has_type_filter && shownFilters.paintings);
+  // Worth more than a footnote when the filters leave less than half of what was found.
+  const filtersHideMost = filtersNarrow && hidden > results.length;
   // The segment on the left of the bar already says what is searched.
   const searchPlaceholder = "Artist, place, mood";
 
@@ -640,7 +684,7 @@ export default function Discover() {
       {!inAll && source && !error && (
         <p className="mb-3 text-xs text-muted-foreground" aria-live="polite">
           {loading ? "Searching…" : `${results.length} work${results.length === 1 ? "" : "s"} shown`}
-          {!loading && hidden > 0 && filtersNarrow && (
+          {!loading && hidden > 0 && filtersNarrow && !filtersHideMost && (
             <>
               {" · "}
               {hidden} hidden by your filters.{" "}
@@ -653,6 +697,24 @@ export default function Discover() {
               </button>
             </>
           )}
+        </p>
+      )}
+
+      {!inAll && source && !error && !loading && filtersHideMost && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/40 bg-primary/5 p-3 text-sm">
+          <p>
+            Your filters hid {hidden} of {hidden + results.length} works found.
+          </p>
+          <Button variant="outline" size="sm" onClick={() => changeFilters(NO_FILTERS)}>
+            Show everything
+          </Button>
+        </div>
+      )}
+
+      {!inAll && source && !error && !loading && resting > 0 && (
+        <p className="mb-4 text-xs text-muted-foreground" aria-live="polite">
+          {source.short_name} needs a short pause, so this is what was found so far.
+          {hasMore ? ` Load more in about ${resting < 90 ? `${resting} s` : `${Math.round(resting / 60)} min`}.` : ""}
         </p>
       )}
 
@@ -671,7 +733,7 @@ export default function Discover() {
           </div>
         ) : (
           <>
-            {!error && results.length === 0 && (
+            {!error && results.length === 0 && !filtersHideMost && resting === 0 && (
               <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                 <p>Nothing matched{query ? ` “${query}”` : ""}.</p>
                 <p className="mt-1">Try another word{filtersNarrow ? ", or loosen the filters" : ""}.</p>
