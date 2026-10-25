@@ -144,6 +144,11 @@ class CommonsCollection:
     _default_query = "landscape"
 
     @property
+    def theme_style(self):
+        # Fixed keywords are required words, which would turn a theme's OR into "optional".
+        return "first" if self.keywords else "or"
+
+    @property
     def default_query(self):
         return self._default_query() if callable(self._default_query) else self._default_query
 

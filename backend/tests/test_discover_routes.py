@@ -127,6 +127,47 @@ def test_search_asks_the_source_for_the_raw_page_and_filters_afterwards(client, 
     assert fake.searches == [("sunset", 3, False, "any"), ("x", 200, True, "any"), ("", 1, True, "any")]
 
 
+@pytest.mark.parametrize(
+    "style, sent",
+    [
+        ("any", "seascape harbor waves"),
+        ("or", "seascape OR harbor OR waves"),
+        ("first", "seascape"),
+    ],
+)
+def test_a_theme_sends_each_source_its_words_in_the_form_it_reads(client, fake, monkeypatch, style, sent):
+    monkeypatch.setattr(fake, "theme_style", style, raising=False)
+
+    client.get("/api/discover/search?source=fake&q=seascape&terms=harbor,waves,Seascape&paintings=0")
+
+    assert fake.searches[0][0] == sent
+
+
+def test_a_typed_search_without_theme_terms_is_sent_as_typed(client, fake, monkeypatch):
+    monkeypatch.setattr(fake, "theme_style", "or", raising=False)
+
+    client.get("/api/discover/search?source=fake&q=harbor%20at%20dusk")
+
+    assert fake.searches[0][0] == "harbor at dusk"
+
+
+def test_theme_terms_are_cleaned_and_capped():
+    from utils.discover.common import theme_query, theme_terms
+
+    terms = theme_terms("city street", 'bridge, "quoted", skyline:x,, BRIDGE,' + ",".join(f"w{i}" for i in range(20)))
+
+    assert terms[:3] == ["city street", "bridge", "w0"]  # punctuation and repeats dropped
+    assert len(terms) == 8
+
+    class Commons:
+        theme_style = "or"
+
+    # A two-word term would become a required word on Commons, so only single words are joined,
+    # and the text stays short enough for Commons to read in full.
+    joined = theme_query(Commons(), ["city street", "bridge"] + ["boulevard"] * 20)
+    assert joined.startswith("bridge OR boulevard") and len(joined) <= 90
+
+
 def test_search_rejects_unknown_sources_pages_and_shapes(client, fake):
     unknown = client.get("/api/discover/search?source=nope")
     bad_page = client.get("/api/discover/search?source=fake&page=abc")

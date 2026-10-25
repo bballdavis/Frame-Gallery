@@ -59,6 +59,8 @@ class ArtInstituteChicago:
     license_note = "Public domain (CC0)"
     download_hosts = {"www.artic.edu"}
     default_query = "landscape"
+    # A theme's words are ranked by how many match, so all of them help.
+    theme_style = "any"
 
     def _normalise(self, record):
         if not record.get("is_public_domain") or not record.get("image_id"):

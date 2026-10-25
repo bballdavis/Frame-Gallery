@@ -14,7 +14,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
 import { isOptional, orderSources, visibleSources } from "~/lib/discoverPrefs";
-import { exploreTiles, type ExploreTile } from "~/lib/explore";
+import { exploreTiles, themeTerms, type ExploreTile } from "~/lib/explore";
 import { createAlbum, fetchAlbums } from "~/utils/galleryApi";
 import {
   DiscoverApiError,
@@ -87,6 +87,9 @@ export default function Discover() {
   const [scope, setScope] = useState<string>(ALL_SOURCES);
   const [queryInput, setQueryInput] = useState("");
   const [query, setQuery] = useState("");
+  // The text of the theme tile or chip last picked. While the box still holds it, searches
+  // carry the theme's extra words; anything typed is searched as typed.
+  const [theme, setTheme] = useState("");
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   // Until the filters are touched, a source whose works are mostly upright (postcards,
   // posters) starts without the "wide" filter rather than looking empty.
@@ -149,6 +152,10 @@ export default function Discover() {
   const paintingsFor = useCallback(
     (q: string) => (filtersTouched || !q ? filters.paintings : false),
     [filters.paintings, filtersTouched]
+  );
+  const termsFor = useCallback(
+    (q: string) => (theme && q.toLowerCase() === theme.toLowerCase() ? themeTerms(q) : undefined),
+    [theme]
   );
   const changeFilters = (next: Filters) => {
     setFiltersTouched(true);
@@ -223,6 +230,7 @@ export default function Discover() {
             shape: shapeFor(src),
             paintings: paintingsFor(q),
             sharp: filters.sharp,
+            terms: termsFor(q),
           });
         } catch (e) {
           // Out of budget partway: keep what was found, and "Load more" carries on later.
@@ -240,7 +248,7 @@ export default function Discover() {
       }
       return { found, hiddenCount, more, lastPage: page - 1, restFor };
     },
-    [filters.sharp, shapeFor, paintingsFor, sources]
+    [filters.sharp, shapeFor, paintingsFor, termsFor, sources]
   );
 
   const noteResting = useCallback(
@@ -322,6 +330,7 @@ export default function Discover() {
           paintings: paintingsFor(q),
           sharp: filters.sharp,
           limit: ALL_PER_SOURCE,
+          terms: termsFor(q),
         });
         if (token !== allToken.current) return;
         setGroups((current) => ({
@@ -352,7 +361,7 @@ export default function Discover() {
         }));
       }
     },
-    [filters.sharp, shapeFor, paintingsFor]
+    [filters.sharp, shapeFor, paintingsFor, termsFor]
   );
 
   useEffect(() => {
@@ -407,6 +416,7 @@ export default function Discover() {
 
   /** A suggestion chip: search it, then bring the search bar to the top so the results start right under it. */
   function pickSuggestion(text: string) {
+    setTheme(text);
     runSearch(text);
     // The hero folds away over half a second; scroll once it has settled, or the page
     // would land wherever the shifting layout left it.
@@ -417,6 +427,7 @@ export default function Discover() {
   function pickTile(tile: ExploreTile) {
     flushNext.current = true;
     if (tile.scope) setScope(tile.scope);
+    setTheme(tile.query);
     setQueryInput(tile.query);
     setQuery(tile.query);
     window.setTimeout(() => searchBar.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 560);
@@ -595,7 +606,10 @@ export default function Discover() {
             <Input
               type="search"
               value={queryInput}
-              onChange={(e) => setQueryInput(e.target.value)}
+              onChange={(e) => {
+                setTheme("");
+                setQueryInput(e.target.value);
+              }}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
               placeholder={searchPlaceholder}

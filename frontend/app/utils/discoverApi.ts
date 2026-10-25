@@ -143,6 +143,8 @@ export async function searchArt(options: {
   sharp: boolean;
   /** Trim the page, when only a taste of this source is wanted */
   limit?: number;
+  /** An Explore theme's extra words; each source uses them as far as it can */
+  terms?: string[];
 }): Promise<SearchPage> {
   const params = new URLSearchParams({
     source: options.source,
@@ -153,6 +155,7 @@ export async function searchArt(options: {
     sharp: options.sharp ? "1" : "0",
   });
   if (options.limit) params.set("limit", String(options.limit));
+  if (options.terms?.length) params.set("terms", options.terms.join(","));
   return readJson(await fetch(`${API_BASE}/api/discover/search?${params}`));
 }
 

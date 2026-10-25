@@ -207,6 +207,45 @@ def slugify_words(text):
     return re.sub(r"[^a-z0-9]+", " ", (text or "").lower()).split()
 
 
+MAX_THEME_TERMS = 8
+MAX_THEME_TEXT = 90
+_THEME_TERM = re.compile(r"^[\w' -]{1,40}$")
+
+
+def theme_terms(query, raw):
+    """The words of an Explore theme (``raw`` is comma-separated), led by what the box shows."""
+    terms = []
+    for term in [query, *(raw or "").split(",")]:
+        term = " ".join((term or "").split())
+        if term and _THEME_TERM.match(term) and term.lower() not in (t.lower() for t in terms):
+            terms.append(term)
+    return terms[:MAX_THEME_TERMS]
+
+
+def theme_query(source, terms):
+    """What to send a source for a theme, in the way that source reads several words.
+
+    * ``any``: it ranks by how many words match (the Art Institute), so send them all.
+    * ``or``: every word must match unless joined by OR (Commons), so join the one-word terms.
+    * otherwise every word must match, or each search is costly (the Met): the first term only.
+    """
+    style = getattr(source, "theme_style", "first")
+    if style == "any":
+        chosen, joiner = terms, " "
+    elif style == "or":
+        # Commons reads OR as "at least one of these" only when no plain word is required.
+        chosen, joiner = [t for t in terms if " " not in t], " OR "
+    else:
+        return terms[0] if terms else ""
+    text = ""
+    for term in chosen:
+        longer = f"{text}{joiner}{term}" if text else term
+        if len(longer) > MAX_THEME_TEXT:
+            break
+        text = longer
+    return text or (terms[0] if terms else "")
+
+
 class DiskCache:
     """JSON cache on disk, shared by every gunicorn worker.
 

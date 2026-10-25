@@ -761,3 +761,18 @@ def test_commons_drops_placeholder_artists_and_names_printed_twice(net):
     artists = [item["artist"] for item in holidays.search("halloween", 1, True, "any")["results"]]
 
     assert artists == ["Unknown artist", "Ellen Clapsaddle"]
+
+
+def test_theme_words_reach_commons_as_an_or_and_keyword_collections_take_the_first(net):
+    from utils.discover.artic import artic
+    from utils.discover.common import theme_query
+
+    net.add("w/api.php", FakeResponse({"query": {"pages": {}}}))
+    terms = ["seascape", "harbor", "waves"]
+
+    louvre.search(theme_query(louvre, terms), 1, True, "any")
+
+    assert net.calls[0]["params"]["gsrsearch"].startswith('deepcategory:"Paintings in the Louvre" seascape OR harbor OR waves ')
+    assert theme_query(holidays, terms) == "seascape"  # "postcard" is required there
+    assert theme_query(artic, terms) == "seascape harbor waves"
+    assert theme_query(met, terms) == "seascape"

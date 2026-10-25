@@ -23,6 +23,8 @@ from utils.discover.common import (
     PAGE_SIZE,
     http_get,
     prune_old_files,
+    theme_query,
+    theme_terms,
 )
 from utils.discover.crop import (
     FIT_FILL,
@@ -179,8 +181,12 @@ def api_discover_search():
     if shape not in SHAPES:
         raise DiscoverError("shape must be one of: " + ", ".join(SHAPES))
 
+    # An Explore theme sends a few words; each source gets them in the form it reads best.
+    terms = theme_terms(query, request.args.get("terms"))
+    search_text = theme_query(source, terms) if len(terms) > 1 else query
+
     # The source's own page is cached for a day; the filters are applied to it afterwards.
-    raw, cached = cached_search(source, query, page, paintings_only)
+    raw, cached = cached_search(source, search_text, page, paintings_only)
     results, hidden = filter_results(raw["results"], shape, request.args.get("sharp") == "1")
     return jsonify(
         source=source.id,
