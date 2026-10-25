@@ -74,12 +74,36 @@ export default function DiscoverHero({ items, sources, collapsed, onAdd, onView,
     return () => window.clearInterval(timer);
   }, [rotating, count]);
 
-  if (items !== null && items.length === 0) return null;
+  // Folding away above the search bar pulls the bar up with it. On a phone that has just
+  // scrolled to make room for the keyboard, that carries the bar off the top of the screen,
+  // so scroll back by as much as the hero shrinks: the bar stays put. (Browsers' scroll
+  // anchoring does this, but iOS Safari has none, and the Discover page turns it off.)
+  const shell = useRef<HTMLDivElement>(null);
+  const folding = useRef(collapsed);
+  folding.current = collapsed;
+  const shown = items === null || items.length > 0;
+  useEffect(() => {
+    const element = shell.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const space = () => element.getBoundingClientRect().height + parseFloat(getComputedStyle(element).marginBottom || "0");
+    let last = space();
+    const observer = new ResizeObserver(() => {
+      const now = space();
+      const shrunk = last - now;
+      last = now;
+      if (folding.current && shrunk > 0 && window.scrollY > 0) window.scrollBy(0, -shrunk);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [shown]);
+
+  if (!shown) return null;
 
   const go = (next: number) => setIndex(((next % count) + count) % count);
 
   return (
     <div
+      ref={shell}
       // select-none: when the hero unfolds under the pointer at the end of a click, the browser
       // can read it as a drag and highlight the whole thing blue.
       className={`grid select-none transition-[grid-template-rows,opacity,margin] duration-500 ease-out motion-reduce:transition-none ${
